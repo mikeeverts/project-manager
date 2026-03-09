@@ -141,22 +141,45 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer / collapse toggle */}
-      <div className={`border-t border-slate-700 px-2 py-3 flex ${collapsed ? 'justify-center' : 'items-center justify-between px-4'}`}>
-        {!collapsed && <p className="text-slate-500 text-xs">v1.0</p>}
+      {/* Footer */}
+      <div className="border-t border-slate-700 px-2 py-3 space-y-1">
+        {/* Dark mode toggle */}
         <button
-          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={() => dispatch({ type: 'TOGGLE_DARK_MODE' })}
+          title={state.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white ${collapsed ? 'justify-center' : ''}`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {collapsed ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            )}
-          </svg>
+          {state.darkMode ? (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+          {!collapsed && <span>{state.darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
+
+        {/* Collapse toggle */}
+        <div className={`flex ${collapsed ? 'justify-center' : 'items-center justify-between px-2'}`}>
+          {!collapsed && <p className="text-slate-500 text-xs">v1.0</p>}
+          <button
+            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {collapsed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
     </aside>
   );

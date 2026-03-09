@@ -52,25 +52,8 @@ export default function Header() {
             </select>
           </div>
         )}
-        {/* Dark mode toggle */}
-        <button
-          onClick={() => dispatch({ type: 'TOGGLE_DARK_MODE' })}
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          title={state.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {state.darkMode ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
-        <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
+        {/* Date — hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -80,11 +63,15 @@ export default function Header() {
           </span>
         </div>
 
-        {/* Current user + logout */}
+        {/* Current user + logout — always visible */}
         {state.currentUser && (
-          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+          <div className="flex items-center gap-2 sm:pl-2 sm:border-l sm:border-slate-200">
             <Avatar name={state.currentUser.name} color={state.currentUser.avatarColor} size="sm" />
             <div className="hidden sm:block">
+              <p className="text-xs font-medium text-slate-700 leading-tight">{state.currentUser.name}</p>
+              <p className="text-xs text-slate-400 leading-tight">{ROLE_LABELS[state.currentUser.role] || state.currentUser.role}</p>
+            </div>
+            <div className="sm:hidden">
               <p className="text-xs font-medium text-slate-700 leading-tight">{state.currentUser.name}</p>
               <p className="text-xs text-slate-400 leading-tight">{ROLE_LABELS[state.currentUser.role] || state.currentUser.role}</p>
             </div>
