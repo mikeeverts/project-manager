@@ -18,12 +18,37 @@ export default function Login() {
   function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const identifier = email.trim().toLowerCase();
+
+    // ── Site owner (super-admin) login ──────────────────────────────────────
+    if (identifier === 'admin') {
+      const owner = state.siteOwner;
+      if (hashPassword(password) !== owner.password) {
+        setError('Incorrect password.');
+        return;
+      }
+      dispatch({
+        type: 'LOGIN',
+        payload: {
+          isSuperAdmin: true,
+          name: 'Site Admin',
+          email: 'admin',
+          role: 'super_admin',
+          avatarColor: '#6366f1',
+          mustChangePassword: owner.mustChangePassword,
+        },
+      });
+      return;
+    }
+
+    // ── Company member login ────────────────────────────────────────────────
     if (!selectedCompanyId) { setError('Please select a company.'); return; }
-    const member = companyMembers.find(
-      m => m.email.toLowerCase() === email.trim().toLowerCase()
-    );
+    const member = companyMembers.find(m => m.email.toLowerCase() === identifier);
     if (!member) { setError('No account found with that email.'); return; }
-    if (member.isDisabled) { setError('This account has been disabled. Contact your administrator.'); return; }
+    if (member.isDisabled) {
+      setError('This account has been disabled. Contact your administrator.');
+      return;
+    }
     if (member.password !== hashPassword(password)) { setError('Incorrect password.'); return; }
     dispatch({
       type: 'LOGIN',
@@ -41,7 +66,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        {/* Logo / Company name */}
+        {/* Logo / title */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-indigo-500 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg">
             {state.companyLogo ? (
@@ -62,7 +87,7 @@ export default function Login() {
         {/* Form */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Company selector (hidden if only one company) */}
+            {/* Company selector — hidden if only one company */}
             {state.companies.length > 1 && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Company</label>
@@ -80,13 +105,14 @@ export default function Login() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email / Username</label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setError(''); }}
                 placeholder="you@example.com"
                 autoFocus
+                autoComplete="username"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -97,6 +123,7 @@ export default function Login() {
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError(''); }}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -116,7 +143,7 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Demo credentials hint (only shows if a company is selected) */}
+        {/* Credentials hint for selected company */}
         {selectedCompanyId && companyMembers.length > 0 && (
           <div className="mt-4">
             <button

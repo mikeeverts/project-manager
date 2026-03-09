@@ -12,12 +12,173 @@ const DEPT_COLORS = [
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4',
 ];
 
-const TABS = [
+const BASE_TABS = [
   { id: 'company',         label: 'Company' },
   { id: 'project-members', label: 'Project Members' },
   { id: 'departments',     label: 'Departments' },
   { id: 'colors',          label: 'Colors' },
 ];
+const SUPER_ADMIN_TABS = [
+  { id: 'companies', label: 'Companies' },
+];
+
+// ── Companies tab (super-admin only) ─────────────────────────────────────────
+function CompaniesTab() {
+  const { rawState, dispatch } = useApp();
+  const [showCreate, setShowCreate] = useState(false);
+  const [editCompany, setEditCompany] = useState(null);
+  const [deleteCompany, setDeleteCompany] = useState(null);
+  const [newName, setNewName] = useState('');
+  const [editName, setEditName] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  const companies = rawState.companies;
+
+  function getStats(companyId) {
+    const members = rawState.teamMembers.filter(m => m.companyId === companyId);
+    const projects = rawState.projects.filter(p => p.companyId === companyId);
+    const projectIds = new Set(projects.map(p => p.id));
+    const tasks = rawState.tasks.filter(t => projectIds.has(t.projectId));
+    return { members: members.length, projects: projects.length, tasks: tasks.length };
+  }
+
+  function handleCreate(e) {
+    e.preventDefault();
+    if (!newName.trim()) { setNameError('Name is required'); return; }
+    dispatch({ type: 'ADD_COMPANY', payload: { id: uuidv4(), name: newName.trim(), createdAt: new Date().toISOString() } });
+    setNewName(''); setShowCreate(false); setNameError('');
+  }
+
+  function handleEdit(e) {
+    e.preventDefault();
+    if (!editName.trim()) return;
+    dispatch({ type: 'UPDATE_COMPANY', payload: { ...editCompany, name: editName.trim() } });
+    setEditCompany(null);
+  }
+
+  function handleDelete(id) {
+    dispatch({ type: 'DELETE_COMPANY', payload: id });
+    setDeleteCompany(null);
+  }
+
+  function handleEnter(companyId) {
+    dispatch({ type: 'SET_IMPERSONATION', payload: companyId });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">All Companies</h2>
+            <p className="text-sm text-slate-500 mt-0.5">{companies.length} {companies.length === 1 ? 'company' : 'companies'} registered</p>
+          </div>
+          <button
+            onClick={() => { setShowCreate(true); setNewName(''); setNameError(''); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Company
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {showCreate && (
+            <form onSubmit={handleCreate} className="flex items-center gap-3 p-3 border border-indigo-200 bg-indigo-50 rounded-lg">
+              <input
+                type="text"
+                value={newName}
+                onChange={e => { setNewName(e.target.value); setNameError(''); }}
+                placeholder="Company name"
+                autoFocus
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {nameError && <p className="text-red-500 text-xs">{nameError}</p>}
+              <button type="submit" className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create</button>
+              <button type="button" onClick={() => setShowCreate(false)} className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">Cancel</button>
+            </form>
+          )}
+
+          {companies.map(company => {
+            const stats = getStats(company.id);
+            const isEditing = editCompany?.id === company.id;
+            return (
+              <div key={company.id} className="flex items-center gap-4 p-4 border border-slate-200 rounded-xl">
+                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-indigo-700 font-bold text-xs">{company.name.slice(0, 2).toUpperCase()}</span>
+                </div>
+                {isEditing ? (
+                  <form onSubmit={handleEdit} className="flex-1 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      autoFocus
+                      className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button type="submit" className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save</button>
+                    <button type="button" onClick={() => setEditCompany(null)} className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg">Cancel</button>
+                  </form>
+                ) : (
+                  <>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-800 text-sm">{company.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {stats.members} members · {stats.projects} projects · {stats.tasks} tasks
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleEnter(company.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Enter as Admin
+                    </button>
+                    <button
+                      onClick={() => { setEditCompany(company); setEditName(company.name); }}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setDeleteCompany(company)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {companies.length === 0 && !showCreate && (
+            <p className="text-sm text-slate-400 text-center py-6">No companies yet. Click New Company to create one.</p>
+          )}
+        </div>
+      </div>
+
+      <ConfirmModal
+        isOpen={!!deleteCompany}
+        onClose={() => setDeleteCompany(null)}
+        onConfirm={() => handleDelete(deleteCompany?.id)}
+        title="Delete Company"
+        message={deleteCompany ? `Delete "${deleteCompany.name}"? All members, projects, and tasks for this company will be permanently removed.` : ''}
+        confirmLabel="Delete Company"
+        variant="danger"
+      />
+    </div>
+  );
+}
 
 // ── Project Members tab ───────────────────────────────────────────────────────
 function ProjectMembersTab() {
@@ -799,7 +960,9 @@ function ColorsTab() {
 // ── Main Settings component ───────────────────────────────────────────────────
 export default function Settings() {
   const { state } = useApp();
-  const [activeTab, setActiveTab] = useState('company');
+  const isSuperAdmin = state.currentUser?.isSuperAdmin;
+  const tabs = isSuperAdmin ? [...SUPER_ADMIN_TABS, ...BASE_TABS] : BASE_TABS;
+  const [activeTab, setActiveTab] = useState(isSuperAdmin ? 'companies' : 'company');
 
   if (!isAdmin(state.currentUser)) {
     return (
@@ -822,7 +985,7 @@ export default function Settings() {
     <div className="p-6 max-w-4xl">
       {/* Tab bar */}
       <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1">
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -837,6 +1000,7 @@ export default function Settings() {
         ))}
       </div>
 
+      {activeTab === 'companies'       && <CompaniesTab />}
       {activeTab === 'company'         && <CompanyTab />}
       {activeTab === 'project-members' && <ProjectMembersTab />}
       {activeTab === 'departments'     && <DepartmentsTab />}

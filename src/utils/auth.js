@@ -6,6 +6,7 @@ export const ROLES = {
 
 export function canDo(currentUser, requiredRole) {
   if (!currentUser) return false;
+  if (currentUser.isSuperAdmin) return true; // site owner can do anything
   return (ROLES[currentUser.role] || 0) >= (ROLES[requiredRole] || 0);
 }
 
