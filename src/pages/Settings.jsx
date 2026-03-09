@@ -669,6 +669,67 @@ const UI_COLOR_FIELDS = [
   { key: 'sidebarAccent', label: 'Sidebar Active Item',  description: 'Highlight color for the currently selected menu item.' },
   { key: 'headerBg',      label: 'Header Background',   description: 'Background color of the top navigation bar.' },
   { key: 'headerBorder',  label: 'Header Border',       description: 'Bottom border color of the top navigation bar.' },
+  { key: 'contentBg',     label: 'Content Background',  description: 'Background color of the main content area.' },
+];
+
+const THEME_OPTIONS = [
+  {
+    id: 'light',
+    label: 'Light',
+    description: 'Clean white interface',
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-slate-200 flex">
+        <div className="w-8 bg-slate-800 flex-shrink-0" />
+        <div className="flex-1 bg-white flex flex-col">
+          <div className="h-4 bg-slate-100 border-b border-slate-200" />
+          <div className="flex-1 p-1.5 space-y-1">
+            <div className="h-1.5 w-3/4 bg-slate-200 rounded" />
+            <div className="h-1.5 w-1/2 bg-slate-200 rounded" />
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'dark',
+    label: 'Dark',
+    description: 'Easy on the eyes',
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-slate-600 flex">
+        <div className="w-8 bg-slate-900 flex-shrink-0" />
+        <div className="flex-1 bg-slate-800 flex flex-col">
+          <div className="h-4 bg-slate-700 border-b border-slate-600" />
+          <div className="flex-1 p-1.5 space-y-1">
+            <div className="h-1.5 w-3/4 bg-slate-600 rounded" />
+            <div className="h-1.5 w-1/2 bg-slate-600 rounded" />
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'system',
+    label: 'System',
+    description: 'Follows your OS setting',
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-slate-200 flex">
+        <div className="w-8 bg-slate-800 flex-shrink-0" />
+        <div className="flex-1 flex flex-col">
+          <div className="h-4 border-b" style={{ background: 'linear-gradient(to right, #f1f5f9 50%, #334155 50%)', borderColor: '#cbd5e1' }} />
+          <div className="flex-1 flex">
+            <div className="flex-1 bg-white p-1.5 space-y-1">
+              <div className="h-1.5 w-3/4 bg-slate-200 rounded" />
+              <div className="h-1.5 w-1/2 bg-slate-200 rounded" />
+            </div>
+            <div className="flex-1 bg-slate-800 p-1.5 space-y-1">
+              <div className="h-1.5 w-3/4 bg-slate-600 rounded" />
+              <div className="h-1.5 w-1/2 bg-slate-600 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 function ColorsTab() {
@@ -736,6 +797,47 @@ function ColorsTab() {
   return (
     <div className="space-y-6">
 
+      {/* Theme Mode */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-base font-semibold text-slate-800 mb-1">Theme Mode</h2>
+        <p className="text-sm text-slate-500 mb-5">Choose how the interface appears. System mode follows your OS preference.</p>
+        <div className="grid grid-cols-3 gap-3">
+          {THEME_OPTIONS.map(opt => {
+            const active = (state.themeMode || 'light') === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => dispatch({ type: 'SET_THEME_MODE', payload: opt.id })}
+                className={`flex flex-col gap-2.5 p-3 rounded-xl border-2 text-left transition-all ${
+                  active
+                    ? 'border-indigo-500 bg-indigo-50'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                {opt.preview}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm font-medium ${active ? 'text-indigo-700' : 'text-slate-700'}`}>
+                      {opt.label}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">{opt.description}</p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${
+                    active ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300'
+                  }`}>
+                    {active && (
+                      <svg className="w-full h-full text-white" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* UI Theme Colors */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-5">
@@ -795,7 +897,7 @@ function ColorsTab() {
                 <span className="text-xs font-semibold" style={{ fontSize: 9, color: localUiColors.headerBg === '#ffffff' || parseInt(localUiColors.headerBg.replace('#','').substring(0,2),16) > 128 ? '#1e293b' : '#ffffff' }}>Dashboard</span>
                 <div className="w-10 h-3 rounded-full bg-slate-200" />
               </div>
-              <div className="flex-1 bg-slate-50 px-3 py-1.5">
+              <div className="flex-1 px-3 py-1.5" style={{ backgroundColor: localUiColors.contentBg || '#f8fafc' }}>
                 <div className="h-2 w-3/4 bg-slate-200 rounded mb-1" />
                 <div className="h-2 w-1/2 bg-slate-200 rounded" />
               </div>

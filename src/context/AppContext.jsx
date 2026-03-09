@@ -10,6 +10,7 @@ export const defaultUiColors = {
   sidebarAccent: '#6366f1',
   headerBg:      '#ffffff',
   headerBorder:  '#e2e8f0',
+  contentBg:     '#f8fafc',
 };
 
 const DEFAULT_SITE_OWNER = {
@@ -29,7 +30,7 @@ const initialState = {
   uiColors: defaultUiColors,
   companyName: 'ProjectHub',
   companyLogo: null,
-  darkMode: false,
+  themeMode: 'light', // 'light' | 'dark' | 'system'
   filterProject: 'all',
   sidebarCollapsed: false,
   currentUser: null,
@@ -159,8 +160,13 @@ function reducer(state, action) {
       return { ...state, companyName: action.payload };
     case 'UPDATE_COMPANY_LOGO':
       return { ...state, companyLogo: action.payload };
-    case 'TOGGLE_DARK_MODE':
-      return { ...state, darkMode: !state.darkMode };
+    case 'SET_THEME_MODE':
+      return { ...state, themeMode: action.payload };
+    case 'TOGGLE_DARK_MODE': {
+      // Cycles: light → dark → system → light
+      const next = { light: 'dark', dark: 'system', system: 'light' };
+      return { ...state, themeMode: next[state.themeMode] || 'dark' };
+    }
     case 'SET_FILTER_PROJECT':
       return { ...state, filterProject: action.payload };
     case 'TOGGLE_SIDEBAR':
@@ -238,7 +244,7 @@ export function AppProvider({ children }) {
     uiColors: saved?.uiColors ? { ...defaultUiColors, ...saved.uiColors } : defaultUiColors,
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
-    darkMode: saved?.darkMode ?? false,
+    themeMode: saved?.themeMode ?? (saved?.darkMode ? 'dark' : 'light'),
     filterProject: saved?.filterProject ?? 'all',
     sidebarCollapsed: saved?.sidebarCollapsed ?? false,
     currentUser: saved?.currentUser ?? null,
