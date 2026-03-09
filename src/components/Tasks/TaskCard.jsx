@@ -53,10 +53,19 @@ export default function TaskCard({ task, onClick, onDelete, compact = false }) {
             <PriorityBadge priority={task.priority} />
             <span className="text-xs font-medium text-slate-500">{task.completionPercentage}%</span>
           </div>
-          {assignee && (
+          {task.assignToAll && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              All Members
+            </span>
+          )}
+          {!task.assignToAll && assignee && (
             <Avatar name={assignee.name} color={assignee.avatarColor} size="sm" />
           )}
-          {!assignee && department && (
+          {!task.assignToAll && !assignee && department && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: department.color + '20', color: department.color }}>
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: department.color }} />
               {department.name}

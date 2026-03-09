@@ -92,7 +92,7 @@ function ProjectMembersTab() {
         {selectedProject ? (
           <>
             {/* Panel header */}
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedProject.color }} />
                 <div>
@@ -102,8 +102,29 @@ function ProjectMembersTab() {
                   </p>
                 </div>
               </div>
-              <div className="text-xs text-slate-400">
-                Project Role determines what a member can do within this project.
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-400">Select all</span>
+                <button
+                  onClick={() => {
+                    const allAssigned = state.teamMembers.every(m => isAssigned(m.id));
+                    const newMembers = allAssigned
+                      ? []
+                      : state.teamMembers.map(m =>
+                          projectMembers.find(pm => pm.memberId === m.id) ?? { memberId: m.id, projectRole: 'user' }
+                        );
+                    dispatch({ type: 'UPDATE_PROJECT', payload: { ...selectedProject, members: newMembers } });
+                  }}
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                    state.teamMembers.length > 0 && state.teamMembers.every(m => isAssigned(m.id))
+                      ? 'bg-indigo-600'
+                      : 'bg-slate-200'
+                  }`}
+                  title="Assign / remove all members"
+                >
+                  <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    state.teamMembers.length > 0 && state.teamMembers.every(m => isAssigned(m.id)) ? 'translate-x-4' : 'translate-x-0'
+                  }`} />
+                </button>
               </div>
             </div>
 

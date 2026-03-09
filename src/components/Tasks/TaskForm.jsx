@@ -26,6 +26,7 @@ function emptyForm(projectId = '', status = 'todo') {
     description: '',
     assigneeId: '',
     departmentId: '',
+    assignToAll: false,
     startDate: today,
     dueDate: nextWeek,
     completionPercentage: 0,
@@ -50,6 +51,7 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
           description: task.description || '',
           assigneeId: task.assigneeId || '',
           departmentId: task.departmentId || '',
+          assignToAll: task.assignToAll || false,
           startDate: task.startDate || new Date().toISOString(),
           dueDate: task.dueDate || new Date().toISOString(),
           completionPercentage: task.completionPercentage ?? 0,
@@ -57,7 +59,7 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
           dependencies: task.dependencies || [],
           priority: task.priority || 'medium',
         });
-        setAssignType(task.departmentId ? 'department' : 'user');
+        setAssignType(task.assignToAll ? 'all' : task.departmentId ? 'department' : 'user');
       } else {
         setForm(emptyForm(defaultProjectId, defaultStatus));
         setAssignType('user');
@@ -163,7 +165,7 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 mb-2 w-fit">
             <button
               type="button"
-              onClick={() => { setAssignType('user'); set('departmentId', ''); }}
+              onClick={() => { setAssignType('user'); set('departmentId', ''); set('assignToAll', false); }}
               className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
                 assignType === 'user' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
@@ -172,15 +174,25 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
             </button>
             <button
               type="button"
-              onClick={() => { setAssignType('department'); set('assigneeId', ''); }}
+              onClick={() => { setAssignType('department'); set('assigneeId', ''); set('assignToAll', false); }}
               className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
                 assignType === 'department' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               Department
             </button>
+            <button
+              type="button"
+              onClick={() => { setAssignType('all'); set('assigneeId', ''); set('departmentId', ''); set('assignToAll', true); }}
+              className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                assignType === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              All Members
+            </button>
           </div>
-          {assignType === 'user' ? (
+
+          {assignType === 'user' && (
             <select
               value={form.assigneeId}
               onChange={e => set('assigneeId', e.target.value)}
@@ -191,7 +203,9 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
-          ) : (
+          )}
+
+          {assignType === 'department' && (
             <select
               value={form.departmentId}
               onChange={e => set('departmentId', e.target.value)}
@@ -203,6 +217,44 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
               ))}
             </select>
           )}
+
+          {assignType === 'all' && (() => {
+            const project = state.projects.find(p => p.id === form.projectId);
+            const projectMemberIds = (project?.members ?? []).map(m => m.memberId);
+            const members = projectMemberIds.length > 0
+              ? state.teamMembers.filter(m => projectMemberIds.includes(m.id))
+              : state.teamMembers;
+            return (
+              <div className="border border-indigo-200 bg-indigo-50 rounded-lg px-4 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-indigo-700">
+                    Assigned to all project members ({members.length})
+                  </span>
+                </div>
+                {members.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {members.map(m => (
+                      <span key={m.id} className="flex items-center gap-1 bg-white border border-indigo-200 rounded-full px-2 py-0.5 text-xs text-slate-700">
+                        <span
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: m.avatarColor }}
+                        />
+                        {m.name.split(' ')[0]}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-indigo-500">
+                    {form.projectId ? 'No members assigned to this project yet — assign them in Settings → Project Members.' : 'Select a project first.'}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Dates */}
