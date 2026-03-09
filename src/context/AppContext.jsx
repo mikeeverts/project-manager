@@ -117,12 +117,14 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
   const saved = loadState();
 
-  const [state, dispatch] = useReducer(reducer, saved || {
+  const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     projects: seedProjects,
     teamMembers: seedTeamMembers,
     tasks: seedTasks,
     departments: seedDepartments,
+    ...(saved || {}),
+    departments: saved?.departments ?? seedDepartments,
   });
 
   const [filterProject, setFilterProject] = useState('all');
