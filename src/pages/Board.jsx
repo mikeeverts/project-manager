@@ -219,6 +219,16 @@ export default function Board() {
     <div className="p-6 flex flex-col h-full">
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <button
+          onClick={() => handleAddTask('todo')}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Task
+        </button>
+        <div className="w-px h-5 bg-slate-200" />
         <span className="text-sm text-slate-500 font-medium">Member:</span>
         <button
           onClick={() => setFilterMember('all')}

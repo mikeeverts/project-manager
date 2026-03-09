@@ -21,6 +21,7 @@ const localizer = dateFnsLocalizer({
 export default function Calendar() {
   const { state, filterProject } = useApp();
   const [editTask, setEditTask] = useState(null);
+  const [taskModal, setTaskModal] = useState(false);
   const [view, setView] = useState('month');
   const [date, setDate] = useState(new Date());
   const [filterMember, setFilterMember] = useState('all');
@@ -68,6 +69,15 @@ export default function Calendar() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex-1 overflow-hidden" style={{ minHeight: '600px' }}>
         <div className="p-4 border-b border-slate-200 flex flex-col gap-3">
           <div className="flex items-center gap-4 flex-wrap">
+            <button
+              onClick={() => setTaskModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Task
+            </button>
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
               {['month', 'week', 'day', 'agenda'].map(v => (
                 <button
@@ -132,6 +142,10 @@ export default function Calendar() {
         </div>
       </div>
 
+      <TaskForm
+        isOpen={taskModal}
+        onClose={() => setTaskModal(false)}
+      />
       <TaskForm
         isOpen={!!editTask}
         onClose={() => setEditTask(null)}
