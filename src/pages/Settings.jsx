@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import { getCompletionColor } from '../utils/colors';
 import ProgressBar from '../components/UI/ProgressBar';
+
+const DEPT_COLORS = [
+  '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6',
+  '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4',
+];
 
 export default function Settings() {
   const { state, dispatch } = useApp();
@@ -16,6 +22,30 @@ export default function Settings() {
     dispatch({ type: 'UPDATE_COMPANY_NAME', payload: companyName.trim() || 'ProjectHub' });
     setCompanySaved(true);
     setTimeout(() => setCompanySaved(false), 2000);
+  }
+
+  // Departments
+  const [newDept, setNewDept] = useState({ name: '', color: '#6366f1' });
+  const [showAddDept, setShowAddDept] = useState(false);
+  const [editingDept, setEditingDept] = useState(null); // { id, name, color }
+
+  function handleAddDept() {
+    if (!newDept.name.trim()) return;
+    dispatch({ type: 'ADD_DEPARTMENT', payload: { id: uuidv4(), name: newDept.name.trim(), color: newDept.color, createdAt: new Date().toISOString() } });
+    setNewDept({ name: '', color: '#6366f1' });
+    setShowAddDept(false);
+  }
+
+  function handleSaveDept() {
+    if (!editingDept.name.trim()) return;
+    dispatch({ type: 'UPDATE_DEPARTMENT', payload: { ...editingDept, name: editingDept.name.trim() } });
+    setEditingDept(null);
+  }
+
+  function handleDeleteDept(id) {
+    if (confirm('Delete this department? Members and tasks assigned to it will become unassigned.')) {
+      dispatch({ type: 'DELETE_DEPARTMENT', payload: id });
+    }
   }
 
   function updateRange(index, field, value) {
@@ -76,6 +106,113 @@ export default function Settings() {
               </svg>
               Saved!
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Departments */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-800">Departments</h2>
+            <p className="text-sm text-slate-500 mt-0.5">Organize your team and assign tasks to departments.</p>
+          </div>
+          <button
+            onClick={() => { setShowAddDept(true); setEditingDept(null); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {(state.departments || []).map(dept => (
+            <div key={dept.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg">
+              {editingDept?.id === dept.id ? (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {DEPT_COLORS.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setEditingDept(d => ({ ...d, color: c }))}
+                        className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${editingDept.color === c ? 'ring-2 ring-offset-1 ring-indigo-500 scale-110' : ''}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={editingDept.name}
+                    onChange={e => setEditingDept(d => ({ ...d, name: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSaveDept(); if (e.key === 'Escape') setEditingDept(null); }}
+                    autoFocus
+                    className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button onClick={handleSaveDept} className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save</button>
+                  <button onClick={() => setEditingDept(null)} className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: dept.color }} />
+                  <span className="flex-1 text-sm font-medium text-slate-700">{dept.name}</span>
+                  <span className="text-xs text-slate-400">
+                    {state.teamMembers.filter(m => m.departmentId === dept.id).length} members
+                  </span>
+                  <button
+                    onClick={() => { setEditingDept({ ...dept }); setShowAddDept(false); }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteDept(dept.id)}
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+
+          {/* Add new department row */}
+          {showAddDept && (
+            <div className="flex items-center gap-3 p-3 border border-indigo-200 bg-indigo-50 rounded-lg">
+              <div className="flex items-center gap-2 flex-wrap">
+                {DEPT_COLORS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setNewDept(d => ({ ...d, color: c }))}
+                    className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${newDept.color === c ? 'ring-2 ring-offset-1 ring-indigo-500 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <input
+                type="text"
+                value={newDept.name}
+                onChange={e => setNewDept(d => ({ ...d, name: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddDept(); if (e.key === 'Escape') setShowAddDept(false); }}
+                placeholder="Department name"
+                autoFocus
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button onClick={handleAddDept} className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add</button>
+              <button onClick={() => setShowAddDept(false)} className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">Cancel</button>
+            </div>
+          )}
+
+          {(state.departments || []).length === 0 && !showAddDept && (
+            <p className="text-sm text-slate-400 text-center py-4">No departments yet. Click Add to create one.</p>
           )}
         </div>
       </div>
