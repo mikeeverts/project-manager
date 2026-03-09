@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { canDo } from '../utils/auth';
 import TaskCard from '../components/Tasks/TaskCard';
 import TaskForm from '../components/Tasks/TaskForm';
-import Modal from '../components/UI/Modal';
+import ConfirmModal from '../components/UI/ConfirmModal';
 import ProgressBar from '../components/UI/ProgressBar';
 import { formatDate, isOverdue } from '../utils/dates';
 
@@ -11,9 +12,11 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
+  const canManage = canDo(state.currentUser, 'project_manager');
   const [taskModal, setTaskModal] = useState(false);
   const [editTask, setEditTask] = useState(null);
   const [deleteTask, setDeleteTask] = useState(null);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [filter, setFilter] = useState('all');
 
   const project = state.projects.find(p => p.id === id);
@@ -47,6 +50,15 @@ export default function ProjectDetail() {
     setDeleteTask(null);
   }
 
+  function toggleClosed() {
+    dispatch({
+      type: 'UPDATE_PROJECT',
+      payload: { ...project, status: isClosed ? 'active' : 'closed' },
+    });
+  }
+
+  const isClosed = project.status === 'closed';
+
   return (
     <div className="p-6">
       {/* Back */}
@@ -61,34 +73,69 @@ export default function ProjectDetail() {
       </button>
 
       {/* Project header */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+      <div className={`bg-white rounded-xl border shadow-sm p-6 mb-6 ${isClosed ? 'border-slate-300' : 'border-slate-200'}`}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <div
               className="w-14 h-14 rounded-xl flex-shrink-0"
-              style={{ backgroundColor: project.color + '20' }}
+              style={{ backgroundColor: (isClosed ? '#94a3b8' : project.color) + '20' }}
             >
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: project.color }} />
+                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: isClosed ? '#94a3b8' : project.color }} />
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">{project.name}</h2>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className={`text-xl font-bold ${isClosed ? 'text-slate-400' : 'text-slate-800'}`}>{project.name}</h2>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isClosed ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-700'}`}>
+                  {isClosed ? 'Closed' : 'Open'}
+                </span>
+              </div>
               {project.description && (
                 <p className="text-slate-500 text-sm mt-0.5">{project.description}</p>
               )}
               <p className="text-xs text-slate-400 mt-1">Created {formatDate(project.createdAt)}</p>
             </div>
           </div>
-          <button
-            onClick={() => setTaskModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Task
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {canManage && (
+              <button
+                onClick={() => isClosed ? toggleClosed() : setConfirmClose(true)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  isClosed
+                    ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100'
+                    : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
+                }`}
+              >
+                {isClosed ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reopen Project
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Close Project
+                  </>
+                )}
+              </button>
+            )}
+            {canManage && !isClosed && (
+              <button
+                onClick={() => setTaskModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Task
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stats row */}
@@ -182,19 +229,24 @@ export default function ProjectDetail() {
         onClose={() => setEditTask(null)}
         task={editTask}
       />
-      <Modal isOpen={!!deleteTask} onClose={() => setDeleteTask(null)} title="Delete Task" size="sm">
-        {deleteTask && (
-          <div>
-            <p className="text-slate-600 mb-6">
-              Delete <strong>{deleteTask.title}</strong>? This cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteTask(null)} className="px-4 py-2 text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg">Cancel</button>
-              <button onClick={() => handleDeleteTask(deleteTask.id)} className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg">Delete</button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <ConfirmModal
+        isOpen={!!deleteTask}
+        onClose={() => setDeleteTask(null)}
+        onConfirm={() => handleDeleteTask(deleteTask?.id)}
+        title="Delete Task"
+        message={deleteTask ? `Delete "${deleteTask.title}"? This cannot be undone.` : ''}
+        confirmLabel="Delete Task"
+        variant="danger"
+      />
+      <ConfirmModal
+        isOpen={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        onConfirm={toggleClosed}
+        title="Close Project"
+        message={`Close "${project.name}"? The project will be marked as closed and no new tasks can be added. You can reopen it at any time.`}
+        confirmLabel="Close Project"
+        variant="warning"
+      />
     </div>
   );
 }

@@ -343,7 +343,6 @@ export default function Team() {
           {state.teamMembers.slice((memberPage - 1) * memberPageSize, memberPage * memberPageSize).map(member => {
             const taskCount = state.tasks.filter(t => t.assigneeId === member.id).length;
             const activeTasks = state.tasks.filter(t => t.assigneeId === member.id && t.status !== 'done').length;
-            const dept = state.departments.find(d => d.id === member.departmentId);
 
             return (
               <div key={member.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -379,12 +378,6 @@ export default function Team() {
                   }`}>
                     {ROLE_LABELS[member.role] || member.role}
                   </span>
-                  {dept && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: dept.color + '20', color: dept.color }}>
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dept.color }} />
-                      {dept.name}
-                    </span>
-                  )}
                   <span className="text-xs text-slate-400">Since {formatDate(member.createdAt)}</span>
                 </div>
 
