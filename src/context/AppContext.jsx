@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { seedProjects, seedTeamMembers, seedTasks, defaultColorConfig } from '../utils/seeds';
 
 const STORAGE_KEY = 'project_manager_state';
@@ -99,7 +99,6 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const saved = loadState();
-  const isFirstLoad = !saved;
 
   const [state, dispatch] = useReducer(reducer, saved || {
     ...initialState,
@@ -108,12 +107,14 @@ export function AppProvider({ children }) {
     tasks: seedTasks,
   });
 
+  const [filterProject, setFilterProject] = useState('all');
+
   useEffect(() => {
     saveState(state);
   }, [state]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch, filterProject, setFilterProject }}>
       {children}
     </AppContext.Provider>
   );

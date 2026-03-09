@@ -150,12 +150,11 @@ function Column({ column, tasks, onCardClick, onAddTask }) {
 }
 
 export default function Board() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, filterProject } = useApp();
   const [editTask, setEditTask] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState('todo');
   const [filterMember, setFilterMember] = useState('all');
-  const [filterProject, setFilterProject] = useState('all');
   const [activeTask, setActiveTask] = useState(null);
 
   const sensors = useSensors(
@@ -219,53 +218,28 @@ export default function Board() {
   return (
     <div className="p-6 flex flex-col h-full">
       {/* Filters */}
-      <div className="flex flex-col gap-2 mb-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-slate-500 font-medium w-20">Project:</span>
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <span className="text-sm text-slate-500 font-medium">Member:</span>
+        <button
+          onClick={() => setFilterMember('all')}
+          className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+            filterMember === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          All Members
+        </button>
+        {state.teamMembers.map(m => (
           <button
-            onClick={() => setFilterProject('all')}
-            className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
-              filterProject === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            key={m.id}
+            onClick={() => setFilterMember(filterMember === m.id ? 'all' : m.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+              filterMember === m.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            All Projects
+            <Avatar name={m.name} color={m.avatarColor} size="xs" />
+            {m.name.split(' ')[0]}
           </button>
-          {state.projects.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setFilterProject(filterProject === p.id ? 'all' : p.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
-                filterProject === p.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-              {p.name}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-slate-500 font-medium w-20">Member:</span>
-          <button
-            onClick={() => setFilterMember('all')}
-            className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
-              filterMember === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            All Members
-          </button>
-          {state.teamMembers.map(m => (
-            <button
-              key={m.id}
-              onClick={() => setFilterMember(filterMember === m.id ? 'all' : m.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
-                filterMember === m.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              <Avatar name={m.name} color={m.avatarColor} size="xs" />
-              {m.name.split(' ')[0]}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
       {/* Board */}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/UI/Modal';
+import TaskForm from '../components/Tasks/TaskForm';
 import { formatDate } from '../utils/dates';
 import ProgressBar from '../components/UI/ProgressBar';
 
@@ -98,6 +99,7 @@ export default function Projects() {
   const [createModal, setCreateModal] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [addTaskProjectId, setAddTaskProjectId] = useState(null);
 
   function handleCreate(data) {
     dispatch({
@@ -210,12 +212,23 @@ export default function Projects() {
                     <span>{projectTasks.length} tasks</span>
                     <span>{doneTasks} done</span>
                   </div>
-                  <button
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                    className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                  >
-                    View tasks →
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setAddTaskProjectId(project.id)}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Task
+                    </button>
+                    <button
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      View tasks →
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -239,6 +252,13 @@ export default function Projects() {
           </div>
         )}
       </div>
+
+      {/* Add Task Modal */}
+      <TaskForm
+        isOpen={!!addTaskProjectId}
+        onClose={() => setAddTaskProjectId(null)}
+        defaultProjectId={addTaskProjectId}
+      />
 
       {/* Create Modal */}
       <Modal isOpen={createModal} onClose={() => setCreateModal(false)} title="New Project">

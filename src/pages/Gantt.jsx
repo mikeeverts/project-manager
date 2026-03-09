@@ -21,9 +21,8 @@ function getTaskPosition(task, minDate) {
 }
 
 export default function Gantt() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, filterProject } = useApp();
   const [editTask, setEditTask] = useState(null);
-  const [filterProject, setFilterProject] = useState('all');
   const [filterMember, setFilterMember] = useState('all');
   const containerRef = useRef(null);
   const dragging = useRef(null);
@@ -158,29 +157,6 @@ export default function Gantt() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-slate-500 font-medium w-16">Project:</span>
-            <button
-              onClick={() => setFilterProject('all')}
-              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                filterProject === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              All
-            </button>
-            {state.projects.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setFilterProject(filterProject === p.id ? 'all' : p.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                  filterProject === p.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                {p.name}
-              </button>
-            ))}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-xs text-slate-500 font-medium w-16">Member:</span>
