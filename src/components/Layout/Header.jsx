@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { ROLE_LABELS } from '../../utils/auth';
+import Avatar from '../UI/Avatar';
 
 const pageTitles = {
   '/': 'Dashboard',
@@ -77,6 +79,27 @@ export default function Header() {
             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
+
+        {/* Current user + logout */}
+        {state.currentUser && (
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <Avatar name={state.currentUser.name} color={state.currentUser.avatarColor} size="sm" />
+            <div className="hidden sm:block">
+              <p className="text-xs font-medium text-slate-700 leading-tight">{state.currentUser.name}</p>
+              <p className="text-xs text-slate-400 leading-tight">{ROLE_LABELS[state.currentUser.role] || state.currentUser.role}</p>
+            </div>
+            <button
+              onClick={() => dispatch({ type: 'LOGOUT' })}
+              title="Sign out"
+              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

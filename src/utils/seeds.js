@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { hashPassword } from './auth';
 
 const now = new Date();
 const d = (offsetDays) => {
@@ -44,6 +45,7 @@ export const seedTeamMembers = [
     email: 'alice@example.com',
     avatarColor: '#6366f1',
     role: 'admin',
+    password: hashPassword('alice123'),
     departmentId: 'dept-1',
     createdAt: d(-60),
   },
@@ -52,7 +54,8 @@ export const seedTeamMembers = [
     name: 'Bob Smith',
     email: 'bob@example.com',
     avatarColor: '#f59e0b',
-    role: 'member',
+    role: 'project_manager',
+    password: hashPassword('bob123'),
     departmentId: 'dept-1',
     createdAt: d(-55),
   },
@@ -61,7 +64,8 @@ export const seedTeamMembers = [
     name: 'Carol Davis',
     email: 'carol@example.com',
     avatarColor: '#10b981',
-    role: 'member',
+    role: 'user',
+    password: hashPassword('carol123'),
     departmentId: 'dept-2',
     createdAt: d(-50),
   },
@@ -70,7 +74,8 @@ export const seedTeamMembers = [
     name: 'David Lee',
     email: 'david@example.com',
     avatarColor: '#ef4444',
-    role: 'member',
+    role: 'user',
+    password: hashPassword('david123'),
     departmentId: 'dept-3',
     createdAt: d(-45),
   },
@@ -79,7 +84,8 @@ export const seedTeamMembers = [
     name: 'Eva Martinez',
     email: 'eva@example.com',
     avatarColor: '#8b5cf6',
-    role: 'admin',
+    role: 'project_manager',
+    password: hashPassword('eva123'),
     departmentId: 'dept-3',
     createdAt: d(-40),
   },

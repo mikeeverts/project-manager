@@ -14,6 +14,7 @@ const initialState = {
   darkMode: false,
   filterProject: 'all',
   sidebarCollapsed: false,
+  currentUser: null,
 };
 
 function loadState() {
@@ -123,6 +124,10 @@ function reducer(state, action) {
       return { ...state, filterProject: action.payload };
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
+    case 'LOGIN':
+      return { ...state, currentUser: action.payload };
+    case 'LOGOUT':
+      return { ...state, currentUser: null };
 
     default:
       return state;
@@ -147,6 +152,7 @@ export function AppProvider({ children }) {
     darkMode: saved?.darkMode ?? false,
     filterProject: saved?.filterProject ?? 'all',
     sidebarCollapsed: saved?.sidebarCollapsed ?? false,
+    currentUser: saved?.currentUser ?? null,
   });
 
   useEffect(() => {

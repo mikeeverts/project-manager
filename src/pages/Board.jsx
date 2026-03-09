@@ -14,6 +14,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useApp } from '../context/AppContext';
+import { canDo } from '../utils/auth';
 import { getCompletionColor } from '../utils/colors';
 import { isOverdue, formatDate } from '../utils/dates';
 import Avatar from '../components/UI/Avatar';
@@ -108,7 +109,7 @@ function SortableCard({ task, onClick }) {
   );
 }
 
-function Column({ column, tasks, onCardClick, onAddTask }) {
+function Column({ column, tasks, onCardClick, onAddTask, canManage }) {
   return (
     <div
       className="flex flex-col rounded-xl border border-slate-200 overflow-hidden"
@@ -123,15 +124,17 @@ function Column({ column, tasks, onCardClick, onAddTask }) {
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddTask(column.id)}
-          className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
-          title="Add task"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+        {canManage && (
+          <button
+            onClick={() => onAddTask(column.id)}
+            className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+            title="Add task"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Cards */}
@@ -141,7 +144,7 @@ function Column({ column, tasks, onCardClick, onAddTask }) {
             <SortableCard
               key={task.id}
               task={task}
-              onClick={() => onCardClick(task)}
+              onClick={onCardClick ? () => onCardClick(task) : undefined}
             />
           ))}
         </SortableContext>
@@ -157,6 +160,7 @@ function Column({ column, tasks, onCardClick, onAddTask }) {
 
 export default function Board() {
   const { state, dispatch } = useApp();
+  const canManage = canDo(state.currentUser, 'project_manager');
   const filterProject = state.filterProject;
   const [editTask, setEditTask] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
@@ -226,15 +230,17 @@ export default function Board() {
     <div className="p-6 flex flex-col h-full">
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <button
-          onClick={() => handleAddTask('todo')}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Task
-        </button>
+        {canManage && (
+          <button
+            onClick={() => handleAddTask('todo')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Task
+          </button>
+        )}
         <div className="w-px h-5 bg-slate-200" />
         <span className="text-sm text-slate-500 font-medium">Member:</span>
         <button
@@ -272,8 +278,9 @@ export default function Board() {
               key={col.id}
               column={col}
               tasks={getFilteredTasks(col.id)}
-              onCardClick={setEditTask}
+              onCardClick={canManage ? setEditTask : null}
               onAddTask={handleAddTask}
+              canManage={canManage}
             />
           ))}
         </div>
