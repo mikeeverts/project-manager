@@ -23,10 +23,15 @@ function getTaskPosition(task, minDate) {
 export default function Gantt() {
   const { state, dispatch } = useApp();
   const [editTask, setEditTask] = useState(null);
+  const [filterProject, setFilterProject] = useState('all');
+  const [filterMember, setFilterMember] = useState('all');
   const containerRef = useRef(null);
   const dragging = useRef(null);
 
-  const tasks = state.tasks.filter(t => t.startDate && t.dueDate);
+  const tasks = state.tasks
+    .filter(t => t.startDate && t.dueDate)
+    .filter(t => filterProject === 'all' || t.projectId === filterProject)
+    .filter(t => filterMember === 'all' || t.assigneeId === filterMember);
 
   const { min: minDate, max: maxDate } = useMemo(() => getDateRange(tasks), [tasks]);
   const totalDays = differenceInDays(maxDate, minDate) + 1;
@@ -142,14 +147,62 @@ export default function Gantt() {
     <div className="p-6 flex flex-col h-full">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
         {/* Toolbar */}
-        <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-4">
-          <p className="text-sm text-slate-500">{tasks.length} tasks shown</p>
-          <div className="flex gap-2 text-xs text-slate-500 flex-wrap">
-            {state.colorConfig.ranges.map(r => (
-              <div key={r.label} className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: r.color }} />
-                <span>{r.label}</span>
-              </div>
+        <div className="px-4 py-3 border-b border-slate-200 flex flex-col gap-2">
+          <div className="flex items-center gap-4 flex-wrap">
+            <p className="text-sm text-slate-500">{tasks.length} tasks shown</p>
+            <div className="flex gap-2 text-xs text-slate-500 flex-wrap">
+              {state.colorConfig.ranges.map(r => (
+                <div key={r.label} className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: r.color }} />
+                  <span>{r.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500 font-medium w-16">Project:</span>
+            <button
+              onClick={() => setFilterProject('all')}
+              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                filterProject === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              All
+            </button>
+            {state.projects.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setFilterProject(filterProject === p.id ? 'all' : p.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                  filterProject === p.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                {p.name}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs text-slate-500 font-medium w-16">Member:</span>
+            <button
+              onClick={() => setFilterMember('all')}
+              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                filterMember === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              All
+            </button>
+            {state.teamMembers.map(m => (
+              <button
+                key={m.id}
+                onClick={() => setFilterMember(filterMember === m.id ? 'all' : m.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                  filterMember === m.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <Avatar name={m.name} color={m.avatarColor} size="xs" />
+                {m.name.split(' ')[0]}
+              </button>
             ))}
           </div>
         </div>
