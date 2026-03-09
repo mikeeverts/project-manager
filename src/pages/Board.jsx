@@ -5,13 +5,22 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  pointerWithin,
+  closestCenter,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
+
+// Prefer pointer-position accuracy; fall back to closest centre when pointer
+// isn't inside any droppable (e.g. dragging near the board edge).
+function collisionDetection(args) {
+  const hits = pointerWithin(args);
+  return hits.length > 0 ? hits : closestCenter(args);
+}
 import { CSS } from '@dnd-kit/utilities';
 import { useApp } from '../context/AppContext';
 import { canDo } from '../utils/auth';
@@ -110,9 +119,16 @@ function SortableCard({ task, onClick }) {
 }
 
 function Column({ column, tasks, onCardClick, onAddTask, canManage }) {
+  // Register the whole column as a droppable so cards can land here even when
+  // the column is empty or the pointer is between cards.
+  const { setNodeRef, isOver } = useDroppable({ id: column.id });
+
   return (
     <div
-      className="flex flex-col rounded-xl border border-slate-200 overflow-hidden"
+      ref={setNodeRef}
+      className={`flex flex-col rounded-xl border overflow-hidden transition-colors duration-150 ${
+        isOver ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'
+      }`}
       style={{ backgroundColor: column.bg, minWidth: '260px', flex: '1' }}
     >
       {/* Column header */}
@@ -268,7 +284,7 @@ export default function Board() {
       {/* Board */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
