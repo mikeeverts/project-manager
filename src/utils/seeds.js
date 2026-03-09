@@ -31,6 +31,12 @@ export const seedProjects = [
   },
 ];
 
+export const seedDepartments = [
+  { id: 'dept-1', name: 'Engineering', color: '#6366f1', createdAt: d(-90) },
+  { id: 'dept-2', name: 'Design', color: '#f59e0b', createdAt: d(-90) },
+  { id: 'dept-3', name: 'Marketing', color: '#10b981', createdAt: d(-90) },
+];
+
 export const seedTeamMembers = [
   {
     id: 'member-1',
@@ -38,6 +44,7 @@ export const seedTeamMembers = [
     email: 'alice@example.com',
     avatarColor: '#6366f1',
     role: 'admin',
+    departmentId: 'dept-1',
     createdAt: d(-60),
   },
   {
@@ -46,6 +53,7 @@ export const seedTeamMembers = [
     email: 'bob@example.com',
     avatarColor: '#f59e0b',
     role: 'member',
+    departmentId: 'dept-1',
     createdAt: d(-55),
   },
   {
@@ -54,6 +62,7 @@ export const seedTeamMembers = [
     email: 'carol@example.com',
     avatarColor: '#10b981',
     role: 'member',
+    departmentId: 'dept-2',
     createdAt: d(-50),
   },
   {
@@ -62,6 +71,7 @@ export const seedTeamMembers = [
     email: 'david@example.com',
     avatarColor: '#ef4444',
     role: 'member',
+    departmentId: 'dept-3',
     createdAt: d(-45),
   },
   {
@@ -70,6 +80,7 @@ export const seedTeamMembers = [
     email: 'eva@example.com',
     avatarColor: '#8b5cf6',
     role: 'admin',
+    departmentId: 'dept-3',
     createdAt: d(-40),
   },
 ];

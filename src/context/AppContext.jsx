@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { seedProjects, seedTeamMembers, seedTasks, defaultColorConfig } from '../utils/seeds';
+import { seedProjects, seedTeamMembers, seedTasks, seedDepartments, defaultColorConfig } from '../utils/seeds';
 
 const STORAGE_KEY = 'project_manager_state';
 
@@ -7,6 +7,7 @@ const initialState = {
   projects: [],
   teamMembers: [],
   tasks: [],
+  departments: [],
   colorConfig: defaultColorConfig,
 };
 
@@ -86,6 +87,22 @@ function reducer(state, action) {
         ),
       };
 
+    // Departments
+    case 'ADD_DEPARTMENT':
+      return { ...state, departments: [...state.departments, action.payload] };
+    case 'UPDATE_DEPARTMENT':
+      return {
+        ...state,
+        departments: state.departments.map(d => d.id === action.payload.id ? { ...d, ...action.payload } : d),
+      };
+    case 'DELETE_DEPARTMENT':
+      return {
+        ...state,
+        departments: state.departments.filter(d => d.id !== action.payload),
+        teamMembers: state.teamMembers.map(m => m.departmentId === action.payload ? { ...m, departmentId: null } : m),
+        tasks: state.tasks.map(t => t.departmentId === action.payload ? { ...t, departmentId: null } : t),
+      };
+
     // Color Config
     case 'UPDATE_COLOR_CONFIG':
       return { ...state, colorConfig: action.payload };
@@ -105,6 +122,7 @@ export function AppProvider({ children }) {
     projects: seedProjects,
     teamMembers: seedTeamMembers,
     tasks: seedTasks,
+    departments: seedDepartments,
   });
 
   const [filterProject, setFilterProject] = useState('all');

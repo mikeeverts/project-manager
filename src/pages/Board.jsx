@@ -32,6 +32,7 @@ function KanbanCard({ task, onClick, isDragging = false }) {
   const { state } = useApp();
   const project = state.projects.find(p => p.id === task.projectId);
   const assignee = state.teamMembers.find(m => m.id === task.assigneeId);
+  const department = state.departments?.find(d => d.id === task.departmentId);
   const overdue = isOverdue(task.dueDate) && task.status !== 'done';
 
   return (
@@ -62,6 +63,11 @@ function KanbanCard({ task, onClick, isDragging = false }) {
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400">{task.completionPercentage}%</span>
             {assignee && <Avatar name={assignee.name} color={assignee.avatarColor} size="xs" />}
+            {!assignee && department && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: department.color + '20', color: department.color }}>
+                {department.name}
+              </span>
+            )}
           </div>
         </div>
 

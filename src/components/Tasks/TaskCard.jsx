@@ -9,6 +9,7 @@ export default function TaskCard({ task, onClick, onDelete, compact = false }) {
   const { state } = useApp();
   const project = state.projects.find(p => p.id === task.projectId);
   const assignee = state.teamMembers.find(m => m.id === task.assigneeId);
+  const department = state.departments?.find(d => d.id === task.departmentId);
   const overdue = isOverdue(task.dueDate) && task.status !== 'done';
 
   return (
@@ -54,6 +55,12 @@ export default function TaskCard({ task, onClick, onDelete, compact = false }) {
           </div>
           {assignee && (
             <Avatar name={assignee.name} color={assignee.avatarColor} size="sm" />
+          )}
+          {!assignee && department && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: department.color + '20', color: department.color }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: department.color }} />
+              {department.name}
+            </span>
           )}
         </div>
 
