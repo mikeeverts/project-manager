@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { hashPassword } from '../utils/auth';
 import { seedProjects, seedTeamMembers, seedTasks, seedDepartments, defaultColorConfig } from '../utils/seeds';
 
 const STORAGE_KEY = 'project_manager_state';
@@ -10,7 +12,15 @@ export const defaultUiColors = {
   headerBorder:  '#e2e8f0',
 };
 
+const DEFAULT_SITE_OWNER = {
+  username: 'admin',
+  password: hashPassword('admin'),
+  mustChangePassword: true,
+};
+
 const initialState = {
+  siteOwner: DEFAULT_SITE_OWNER,
+  companies: [],
   projects: [],
   teamMembers: [],
   tasks: [],
@@ -23,6 +33,7 @@ const initialState = {
   filterProject: 'all',
   sidebarCollapsed: false,
   currentUser: null,
+  impersonatedCompanyId: null,
 };
 
 function loadState() {
@@ -45,6 +56,28 @@ function saveState(state) {
 
 function reducer(state, action) {
   switch (action.type) {
+    // Site owner
+    case 'UPDATE_SITE_OWNER':
+      return { ...state, siteOwner: { ...state.siteOwner, ...action.payload } };
+    case 'UPDATE_CURRENT_USER':
+      return { ...state, currentUser: state.currentUser ? { ...state.currentUser, ...action.payload } : state.currentUser };
+
+    // Companies
+    case 'ADD_COMPANY':
+      return { ...state, companies: [...state.companies, action.payload] };
+    case 'UPDATE_COMPANY':
+      return {
+        ...state,
+        companies: state.companies.map(c => c.id === action.payload.id ? { ...c, ...action.payload } : c),
+      };
+    case 'DELETE_COMPANY':
+      return {
+        ...state,
+        companies: state.companies.filter(c => c.id !== action.payload),
+        teamMembers: state.teamMembers.filter(m => m.companyId !== action.payload),
+        projects: state.projects.filter(p => p.companyId !== action.payload),
+      };
+
     // Projects
     case 'ADD_PROJECT':
       return { ...state, projects: [...state.projects, action.payload] };
@@ -117,13 +150,11 @@ function reducer(state, action) {
         tasks: state.tasks.map(t => t.departmentId === action.payload ? { ...t, departmentId: null } : t),
       };
 
-    // Color Config
+    // Colors / UI
     case 'UPDATE_COLOR_CONFIG':
       return { ...state, colorConfig: action.payload };
     case 'UPDATE_UI_COLORS':
       return { ...state, uiColors: { ...state.uiColors, ...action.payload } };
-
-    // Company
     case 'UPDATE_COMPANY_NAME':
       return { ...state, companyName: action.payload };
     case 'UPDATE_COMPANY_LOGO':
@@ -134,10 +165,16 @@ function reducer(state, action) {
       return { ...state, filterProject: action.payload };
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
+
+    // Auth
     case 'LOGIN':
-      return { ...state, currentUser: action.payload };
+      return { ...state, currentUser: action.payload, impersonatedCompanyId: null };
     case 'LOGOUT':
-      return { ...state, currentUser: null };
+      return { ...state, currentUser: null, impersonatedCompanyId: null };
+
+    // Impersonation (super-admin viewing a company as admin)
+    case 'SET_IMPERSONATION':
+      return { ...state, impersonatedCompanyId: action.payload, filterProject: 'all' };
 
     default:
       return state;
@@ -149,25 +186,55 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
   const saved = loadState();
 
-  // Migrate saved team members: if any member is missing a password,
-  // fill it in from the seed data (handles upgrades from pre-auth versions).
-  const migratedMembers = saved?.teamMembers
-    ? saved.teamMembers.map(m => {
-        if (m.password) return m;
-        const seed = seedTeamMembers.find(s => s.id === m.id);
-        return seed ? { ...m, password: seed.password, role: seed.role } : m;
-      })
-    : null;
+  // --- Migration: handle upgrades from previous versions ---
+  let migratedCompanies;
+  let migratedMembers;
+  let migratedProjects;
+
+  if (!saved) {
+    // Fresh install: empty data so setup wizard runs
+    migratedCompanies = [];
+    migratedMembers = [];
+    migratedProjects = [];
+  } else if (saved.companies && saved.companies.length > 0) {
+    migratedCompanies = saved.companies;
+    migratedMembers = (saved.teamMembers || []).map(m => ({
+      ...m,
+      isDisabled: m.isDisabled ?? false,
+    }));
+    migratedProjects = saved.projects || [];
+  } else {
+    // Old single-company data: create default company from saved companyName
+    const defaultCompanyId = uuidv4();
+    migratedCompanies = [{
+      id: defaultCompanyId,
+      name: saved.companyName || 'My Company',
+      createdAt: new Date().toISOString(),
+    }];
+    migratedMembers = (saved.teamMembers || []).map(m => {
+      const seed = seedTeamMembers.find(s => s.id === m.id);
+      return {
+        ...m,
+        password: m.password || seed?.password,
+        role: m.role || seed?.role,
+        companyId: m.companyId || defaultCompanyId,
+        isDisabled: m.isDisabled ?? false,
+      };
+    });
+    migratedProjects = (saved.projects || []).map(p => ({
+      ...p,
+      companyId: p.companyId || defaultCompanyId,
+    }));
+  }
 
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
-    projects: seedProjects,
-    teamMembers: seedTeamMembers,
-    tasks: seedTasks,
-    departments: seedDepartments,
-    ...(saved || {}),
-    teamMembers: migratedMembers ?? seedTeamMembers,
-    departments: saved?.departments ?? seedDepartments,
+    siteOwner: saved?.siteOwner ?? DEFAULT_SITE_OWNER,
+    companies: migratedCompanies,
+    projects: migratedProjects,
+    teamMembers: migratedMembers,
+    tasks: saved?.tasks ?? [],
+    departments: saved?.departments ?? [],
     uiColors: saved?.uiColors ? { ...defaultUiColors, ...saved.uiColors } : defaultUiColors,
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
@@ -175,14 +242,36 @@ export function AppProvider({ children }) {
     filterProject: saved?.filterProject ?? 'all',
     sidebarCollapsed: saved?.sidebarCollapsed ?? false,
     currentUser: saved?.currentUser ?? null,
+    impersonatedCompanyId: saved?.impersonatedCompanyId ?? null,
   });
 
   useEffect(() => {
     saveState(state);
   }, [state]);
 
+  // Scoped state: filter data to the active company
+  // Super-admin sees company data when impersonating, all data otherwise
+  const activeCompanyId = state.impersonatedCompanyId ?? state.currentUser?.companyId ?? null;
+  const scopedProjects = activeCompanyId
+    ? state.projects.filter(p => p.companyId === activeCompanyId)
+    : state.projects;
+  const scopedMembers = activeCompanyId
+    ? state.teamMembers.filter(m => m.companyId === activeCompanyId)
+    : state.teamMembers;
+  const scopedProjectIds = new Set(scopedProjects.map(p => p.id));
+  const scopedTasks = activeCompanyId
+    ? state.tasks.filter(t => scopedProjectIds.has(t.projectId))
+    : state.tasks;
+
+  const scopedState = {
+    ...state,
+    projects: scopedProjects,
+    teamMembers: scopedMembers,
+    tasks: scopedTasks,
+  };
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state: scopedState, dispatch, rawState: state }}>
       {children}
     </AppContext.Provider>
   );

@@ -110,7 +110,7 @@ export default function Projects() {
   function handleCreate(data) {
     dispatch({
       type: 'ADD_PROJECT',
-      payload: { ...data, id: uuidv4(), createdAt: new Date().toISOString(), status: 'active' },
+      payload: { ...data, id: uuidv4(), companyId: state.currentUser?.companyId, createdAt: new Date().toISOString(), status: 'active' },
     });
     setCreateModal(false);
   }

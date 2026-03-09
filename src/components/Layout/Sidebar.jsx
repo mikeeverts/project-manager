@@ -97,7 +97,7 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className={`flex items-center border-b border-slate-700 overflow-hidden transition-all duration-300 ${collapsed ? 'px-4 py-5 justify-center' : 'px-6 py-5 gap-3'}`}>
-        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ backgroundColor: sidebarBg || '#1e293b' }}>
           {state.companyLogo ? (
             <img src={state.companyLogo} alt="Logo" className="w-full h-full object-contain" />
           ) : (
