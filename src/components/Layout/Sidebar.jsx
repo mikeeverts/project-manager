@@ -80,6 +80,7 @@ export default function Sidebar() {
   const { state, dispatch } = useApp();
   const companyName = state.companyName || 'ProjectHub';
   const collapsed = state.sidebarCollapsed;
+  const { sidebarBg, sidebarAccent } = state.uiColors ?? {};
 
   useEffect(() => {
     document.title = companyName;
@@ -92,7 +93,7 @@ export default function Sidebar() {
   return (
     <aside
       className="flex flex-col h-screen flex-shrink-0 transition-all duration-300"
-      style={{ backgroundColor: '#1e293b', width: collapsed ? '64px' : '256px' }}
+      style={{ backgroundColor: sidebarBg || '#1e293b', width: collapsed ? '64px' : '256px' }}
     >
       {/* Logo */}
       <div className={`flex items-center border-b border-slate-700 overflow-hidden transition-all duration-300 ${collapsed ? 'px-4 py-5 justify-center' : 'px-6 py-5 gap-3'}`}>
@@ -123,13 +124,14 @@ export default function Sidebar() {
                 to={item.to}
                 end={item.to === '/'}
                 title={collapsed ? item.label : undefined}
+                style={({ isActive }) => isActive ? { backgroundColor: sidebarAccent || '#6366f1' } : {}}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     collapsed ? 'justify-center' : ''
                   } ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      ? 'text-white'
+                      : 'text-slate-300 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
@@ -147,7 +149,7 @@ export default function Sidebar() {
         <button
           onClick={() => dispatch({ type: 'TOGGLE_DARK_MODE' })}
           title={state.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white ${collapsed ? 'justify-center' : ''}`}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-300 hover:bg-white/10 hover:text-white ${collapsed ? 'justify-center' : ''}`}
         >
           {state.darkMode ? (
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

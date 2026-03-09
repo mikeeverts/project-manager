@@ -3,12 +3,20 @@ import { seedProjects, seedTeamMembers, seedTasks, seedDepartments, defaultColor
 
 const STORAGE_KEY = 'project_manager_state';
 
+export const defaultUiColors = {
+  sidebarBg:     '#1e293b',
+  sidebarAccent: '#6366f1',
+  headerBg:      '#ffffff',
+  headerBorder:  '#e2e8f0',
+};
+
 const initialState = {
   projects: [],
   teamMembers: [],
   tasks: [],
   departments: [],
   colorConfig: defaultColorConfig,
+  uiColors: defaultUiColors,
   companyName: 'ProjectHub',
   companyLogo: null,
   darkMode: false,
@@ -112,6 +120,8 @@ function reducer(state, action) {
     // Color Config
     case 'UPDATE_COLOR_CONFIG':
       return { ...state, colorConfig: action.payload };
+    case 'UPDATE_UI_COLORS':
+      return { ...state, uiColors: { ...state.uiColors, ...action.payload } };
 
     // Company
     case 'UPDATE_COMPANY_NAME':
@@ -158,6 +168,7 @@ export function AppProvider({ children }) {
     ...(saved || {}),
     teamMembers: migratedMembers ?? seedTeamMembers,
     departments: saved?.departments ?? seedDepartments,
+    uiColors: saved?.uiColors ? { ...defaultUiColors, ...saved.uiColors } : defaultUiColors,
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
     darkMode: saved?.darkMode ?? false,

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import { isAdmin, ROLE_LABELS } from '../utils/auth';
 import { getCompletionColor } from '../utils/colors';
+import { defaultUiColors } from '../context/AppContext';
 import Avatar from '../components/UI/Avatar';
 
 const DEPT_COLORS = [
@@ -489,8 +490,25 @@ function DepartmentsTab() {
 }
 
 // ── Colors tab ────────────────────────────────────────────────────────────────
+const UI_COLOR_FIELDS = [
+  { key: 'sidebarBg',     label: 'Sidebar Background',  description: 'Main background color of the navigation sidebar.' },
+  { key: 'sidebarAccent', label: 'Sidebar Active Item',  description: 'Highlight color for the currently selected menu item.' },
+  { key: 'headerBg',     label: 'Header Background',    description: 'Background color of the top navigation bar.' },
+  { key: 'headerBorder', label: 'Header Border',        description: 'Bottom border color of the top navigation bar.' },
+];
+
 function ColorsTab() {
   const { state, dispatch } = useApp();
+  const uiColors = state.uiColors ?? defaultUiColors;
+
+  function updateUiColor(key, value) {
+    dispatch({ type: 'UPDATE_UI_COLORS', payload: { [key]: value } });
+  }
+
+  function resetUiColors() {
+    dispatch({ type: 'UPDATE_UI_COLORS', payload: defaultUiColors });
+  }
+
   const [localConfig, setLocalConfig] = useState(() => ({
     ranges: state.colorConfig.ranges.map(r => ({ ...r })),
   }));
@@ -527,6 +545,76 @@ function ColorsTab() {
 
   return (
     <div className="space-y-6">
+
+      {/* UI Theme Colors */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">UI Theme Colors</h2>
+            <p className="text-sm text-slate-500 mt-0.5">Customize the sidebar and header bar colors. Changes apply immediately.</p>
+          </div>
+          <button onClick={resetUiColors} className="text-sm text-slate-500 hover:text-slate-700 underline">
+            Reset to defaults
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {UI_COLOR_FIELDS.map(({ key, label, description }) => (
+            <div key={key} className="flex items-center gap-4 p-3 border border-slate-200 rounded-xl">
+              {/* Swatch + picker */}
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-12 h-12 rounded-xl border-2 border-slate-200 overflow-hidden cursor-pointer"
+                  style={{ backgroundColor: uiColors[key] }}
+                >
+                  <input
+                    type="color"
+                    value={uiColors[key]}
+                    onChange={e => updateUiColor(key, e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </div>
+                <span className="block text-center text-xs text-slate-400 font-mono mt-1">{uiColors[key]}</span>
+              </div>
+              {/* Label + desc */}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-700">{label}</p>
+                <p className="text-xs text-slate-400 mt-0.5 leading-snug">{description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Live mini-preview */}
+        <div className="mt-5">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Preview</p>
+          <div className="flex rounded-xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: 72 }}>
+            {/* Sidebar preview */}
+            <div className="flex flex-col justify-between px-2 py-2 w-32 flex-shrink-0" style={{ backgroundColor: uiColors.sidebarBg }}>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded bg-indigo-500 flex-shrink-0" />
+                <span className="text-white text-xs font-bold truncate" style={{ fontSize: 9 }}>ProjectHub</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="rounded px-1.5 py-0.5 text-white text-xs" style={{ backgroundColor: uiColors.sidebarAccent, fontSize: 9 }}>Dashboard</div>
+                <div className="rounded px-1.5 py-0.5 text-slate-400" style={{ fontSize: 9 }}>Projects</div>
+              </div>
+            </div>
+            {/* Header + content preview */}
+            <div className="flex-1 flex flex-col">
+              <div className="px-3 flex items-center justify-between border-b flex-shrink-0" style={{ backgroundColor: uiColors.headerBg, borderColor: uiColors.headerBorder, height: 28 }}>
+                <span className="text-xs font-semibold" style={{ fontSize: 9, color: uiColors.headerBg === '#ffffff' || parseInt(uiColors.headerBg.replace('#','').substring(0,2),16) > 128 ? '#1e293b' : '#ffffff' }}>Dashboard</span>
+                <div className="w-10 h-3 rounded-full bg-slate-200" />
+              </div>
+              <div className="flex-1 bg-slate-50 px-3 py-1.5">
+                <div className="h-2 w-3/4 bg-slate-200 rounded mb-1" />
+                <div className="h-2 w-1/2 bg-slate-200 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
