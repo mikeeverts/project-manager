@@ -68,7 +68,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo / title */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-indigo-500 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 overflow-hidden shadow-lg" style={{ backgroundColor: state.uiColors?.sidebarBg || '#1e293b' }}>
             {state.companyLogo ? (
               <img src={state.companyLogo} alt="Logo" className="w-full h-full object-contain" />
             ) : (

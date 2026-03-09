@@ -10,7 +10,7 @@ const AVATAR_COLORS = [
 ];
 
 export default function SetupWizard() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [step, setStep] = useState(1);
 
   // Step 1: Company
@@ -93,7 +93,7 @@ export default function SetupWizard() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: state.uiColors?.sidebarBg || '#1e293b' }}>
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
