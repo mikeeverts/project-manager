@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./node_modules/.bin/tailwindcss init:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm run:*)",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh repo:*)",
+      "Bash(winget:*)",
+      "Bash(gh auth:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(git:*)",
+      "Read(//c/Program Files/GitHub CLI//**)",
+      "Read(//c/Users/everts-m/**)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh\" auth:*)"
+    ]
+  }
+}
