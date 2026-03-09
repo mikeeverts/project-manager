@@ -23,6 +23,9 @@ function ProjectMembersTab() {
   const [selectedProjectId, setSelectedProjectId] = useState(
     state.projects[0]?.id ?? null
   );
+  // Stores member assignments per project captured just before "select all" was turned on,
+  // so toggling it off restores the original state instead of wiping everything.
+  const [savedMembers, setSavedMembers] = useState({});
 
   const selectedProject = state.projects.find(p => p.id === selectedProjectId);
   const projectMembers = selectedProject?.members ?? [];
@@ -107,12 +110,19 @@ function ProjectMembersTab() {
                 <button
                   onClick={() => {
                     const allAssigned = state.teamMembers.every(m => isAssigned(m.id));
-                    const newMembers = allAssigned
-                      ? []
-                      : state.teamMembers.map(m =>
-                          projectMembers.find(pm => pm.memberId === m.id) ?? { memberId: m.id, projectRole: 'user' }
-                        );
-                    dispatch({ type: 'UPDATE_PROJECT', payload: { ...selectedProject, members: newMembers } });
+                    if (allAssigned) {
+                      // Restore the snapshot taken before select-all was applied
+                      const restored = savedMembers[selectedProjectId] ?? [];
+                      dispatch({ type: 'UPDATE_PROJECT', payload: { ...selectedProject, members: restored } });
+                      setSavedMembers(prev => { const next = { ...prev }; delete next[selectedProjectId]; return next; });
+                    } else {
+                      // Snapshot current state then assign everyone
+                      setSavedMembers(prev => ({ ...prev, [selectedProjectId]: projectMembers }));
+                      const newMembers = state.teamMembers.map(m =>
+                        projectMembers.find(pm => pm.memberId === m.id) ?? { memberId: m.id, projectRole: 'user' }
+                      );
+                      dispatch({ type: 'UPDATE_PROJECT', payload: { ...selectedProject, members: newMembers } });
+                    }
                   }}
                   className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
                     state.teamMembers.length > 0 && state.teamMembers.every(m => isAssigned(m.id))
