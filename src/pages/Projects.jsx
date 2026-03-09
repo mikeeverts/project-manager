@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { canDo } from '../utils/auth';
 import Modal from '../components/UI/Modal';
 import TaskForm from '../components/Tasks/TaskForm';
+import Pagination from '../components/UI/Pagination';
 import { formatDate } from '../utils/dates';
 import ProgressBar from '../components/UI/ProgressBar';
 
@@ -102,11 +103,14 @@ export default function Projects() {
   const [editProject, setEditProject] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [addTaskProjectId, setAddTaskProjectId] = useState(null);
+  const [showClosed, setShowClosed] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   function handleCreate(data) {
     dispatch({
       type: 'ADD_PROJECT',
-      payload: { ...data, id: uuidv4(), createdAt: new Date().toISOString() },
+      payload: { ...data, id: uuidv4(), createdAt: new Date().toISOString(), status: 'active' },
     });
     setCreateModal(false);
   }
@@ -121,11 +125,38 @@ export default function Projects() {
     setDeleteConfirm(null);
   }
 
+  function toggleClosed(project) {
+    dispatch({
+      type: 'UPDATE_PROJECT',
+      payload: { ...project, status: project.status === 'closed' ? 'active' : 'closed' },
+    });
+  }
+
+  const filtered = state.projects.filter(p =>
+    showClosed ? true : (p.status !== 'closed')
+  );
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-slate-500 text-sm">{state.projects.length} project{state.projects.length !== 1 ? 's' : ''}</p>
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <p className="text-slate-500 text-sm">
+            {filtered.length} project{filtered.length !== 1 ? 's' : ''}
+          </p>
+          <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showClosed}
+              onChange={e => { setShowClosed(e.target.checked); setPage(1); }}
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            Show closed projects
+          </label>
+        </div>
         {canManage && (
           <button
             onClick={() => setCreateModal(true)}
@@ -141,7 +172,8 @@ export default function Projects() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {state.projects.map(project => {
+        {paginated.map(project => {
+          const isClosed = project.status === 'closed';
           const projectTasks = state.tasks.filter(t => t.projectId === project.id);
           const doneTasks = projectTasks.filter(t => t.status === 'done').length;
           const avg = projectTasks.length > 0
@@ -151,46 +183,70 @@ export default function Projects() {
           return (
             <div
               key={project.id}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+              className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow ${isClosed ? 'border-slate-200 opacity-60' : 'border-slate-200'}`}
             >
               {/* Color bar */}
-              <div className="h-2 rounded-t-xl" style={{ backgroundColor: project.color }} />
+              <div className="h-2 rounded-t-xl" style={{ backgroundColor: isClosed ? '#94a3b8' : project.color }} />
 
               <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-xl flex-shrink-0"
-                      style={{ backgroundColor: project.color + '20' }}
+                      style={{ backgroundColor: (isClosed ? '#94a3b8' : project.color) + '20' }}
                     >
                       <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: project.color }} />
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: isClosed ? '#94a3b8' : project.color }} />
                       </div>
                     </div>
                     <div>
-                      <h3
-                        className="font-semibold text-slate-800 hover:text-indigo-600 cursor-pointer"
-                        onClick={() => navigate(`/projects/${project.id}`)}
-                      >
-                        {project.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className={`font-semibold ${isClosed ? 'text-slate-400 line-through' : 'text-slate-800 hover:text-indigo-600 cursor-pointer'}`}
+                          onClick={() => !isClosed && navigate(`/projects/${project.id}`)}
+                        >
+                          {project.name}
+                        </h3>
+                        {isClosed && (
+                          <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500">Closed</span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-400">{formatDate(project.createdAt)}</p>
                     </div>
                   </div>
                   {canManage && (
                     <div className="flex gap-1">
+                      {!isClosed && (
+                        <button
+                          onClick={() => setEditProject(project)}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="Edit project"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
                       <button
-                        onClick={() => setEditProject(project)}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        onClick={() => toggleClosed(project)}
+                        className={`p-1.5 rounded-lg transition-colors ${isClosed ? 'text-green-500 hover:text-green-700 hover:bg-green-50' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                        title={isClosed ? 'Reopen project' : 'Close project'}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        {isClosed ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(project)}
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete project"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -219,7 +275,7 @@ export default function Projects() {
                     <span>{doneTasks} done</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    {canManage && (
+                    {canManage && !isClosed && (
                       <button
                         onClick={() => setAddTaskProjectId(project.id)}
                         className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
@@ -230,12 +286,14 @@ export default function Projects() {
                         Add Task
                       </button>
                     )}
-                    <button
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
-                      View tasks →
-                    </button>
+                    {!isClosed && (
+                      <button
+                        onClick={() => navigate(`/projects/${project.id}`)}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        View tasks →
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -244,13 +302,13 @@ export default function Projects() {
         })}
 
         {/* Empty state */}
-        {state.projects.length === 0 && (
+        {filtered.length === 0 && (
           <div className="col-span-3 text-center py-16">
             <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <p className="text-slate-400 mb-3">No projects yet</p>
+            <p className="text-slate-400 mb-3">{showClosed ? 'No projects yet' : 'No active projects'}</p>
             {canManage && (
               <button
                 onClick={() => setCreateModal(true)}
@@ -262,6 +320,17 @@ export default function Projects() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {filtered.length > 0 && (
+        <Pagination
+          total={filtered.length}
+          page={safePage}
+          pageSize={pageSize}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
+      )}
 
       {/* Add Task Modal */}
       <TaskForm

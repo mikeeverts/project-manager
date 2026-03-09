@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { canDo, hashPassword, ROLE_LABELS } from '../utils/auth';
 import Modal from '../components/UI/Modal';
 import Avatar from '../components/UI/Avatar';
+import Pagination from '../components/UI/Pagination';
 import { formatDate } from '../utils/dates';
 
 const AVATAR_COLORS = [
@@ -219,6 +220,8 @@ export default function Team() {
   const [createDept, setCreateDept] = useState(false);
   const [editDept, setEditDept] = useState(null);
   const [deleteDept, setDeleteDept] = useState(null);
+  const [memberPage, setMemberPage] = useState(1);
+  const [memberPageSize, setMemberPageSize] = useState(10);
 
   function handleCreateMember(data) {
     dispatch({ type: 'ADD_MEMBER', payload: { ...data, id: uuidv4(), createdAt: new Date().toISOString() } });
@@ -337,7 +340,7 @@ export default function Team() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {state.teamMembers.map(member => {
+          {state.teamMembers.slice((memberPage - 1) * memberPageSize, memberPage * memberPageSize).map(member => {
             const taskCount = state.tasks.filter(t => t.assigneeId === member.id).length;
             const activeTasks = state.tasks.filter(t => t.assigneeId === member.id && t.status !== 'done').length;
             const dept = state.departments.find(d => d.id === member.departmentId);
@@ -408,6 +411,16 @@ export default function Team() {
             </div>
           )}
         </div>
+
+        {state.teamMembers.length > 0 && (
+          <Pagination
+            total={state.teamMembers.length}
+            page={memberPage}
+            pageSize={memberPageSize}
+            onPage={setMemberPage}
+            onPageSize={p => { setMemberPageSize(p); setMemberPage(1); }}
+          />
+        )}
       </div>
 
       {/* Department modals */}
