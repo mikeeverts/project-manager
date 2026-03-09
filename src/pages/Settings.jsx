@@ -5,6 +5,7 @@ import { isAdmin, ROLE_LABELS } from '../utils/auth';
 import { getCompletionColor } from '../utils/colors';
 import { defaultUiColors } from '../context/AppContext';
 import Avatar from '../components/UI/Avatar';
+import ConfirmModal from '../components/UI/ConfirmModal';
 
 const DEPT_COLORS = [
   '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6',
@@ -112,12 +113,10 @@ function ProjectMembersTab() {
                   onClick={() => {
                     const allAssigned = state.teamMembers.every(m => isAssigned(m.id));
                     if (allAssigned) {
-                      // Restore the snapshot taken before select-all was applied
                       const restored = savedMembers[selectedProjectId] ?? [];
                       dispatch({ type: 'UPDATE_PROJECT', payload: { ...selectedProject, members: restored } });
                       setSavedMembers(prev => { const next = { ...prev }; delete next[selectedProjectId]; return next; });
                     } else {
-                      // Snapshot current state then assign everyone
                       setSavedMembers(prev => ({ ...prev, [selectedProjectId]: projectMembers }));
                       const newMembers = state.teamMembers.map(m =>
                         projectMembers.find(pm => pm.memberId === m.id) ?? { memberId: m.id, projectRole: 'user' }
@@ -161,15 +160,12 @@ function ProjectMembersTab() {
                       assigned ? 'bg-white' : 'bg-slate-50/60'
                     }`}
                   >
-                    {/* Checkbox */}
                     <input
                       type="checkbox"
                       checked={assigned}
                       onChange={() => toggleMember(member.id)}
                       className="w-4 h-4 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600"
                     />
-
-                    {/* Member info */}
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar name={member.name} color={member.avatarColor} size="sm" />
                       <div className="min-w-0">
@@ -181,8 +177,6 @@ function ProjectMembersTab() {
                         </p>
                       </div>
                     </div>
-
-                    {/* Global role badge */}
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
                       member.role === 'admin'           ? 'bg-indigo-100 text-indigo-700' :
                       member.role === 'project_manager' ? 'bg-amber-100 text-amber-700' :
@@ -190,8 +184,6 @@ function ProjectMembersTab() {
                     }`}>
                       {ROLE_LABELS[member.role] || member.role}
                     </span>
-
-                    {/* Project role selector */}
                     <div className="w-36">
                       {assigned ? (
                         <select
@@ -233,11 +225,17 @@ function CompanyTab() {
   const { state, dispatch } = useApp();
   const [companyName, setCompanyName] = useState(state.companyName || 'ProjectHub');
   const [companySaved, setCompanySaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   function handleSaveCompany() {
     dispatch({ type: 'UPDATE_COMPANY_NAME', payload: companyName.trim() || 'ProjectHub' });
     setCompanySaved(true);
     setTimeout(() => setCompanySaved(false), 2000);
+  }
+
+  function handleResetData() {
+    localStorage.removeItem('project_manager_state');
+    window.location.reload();
   }
 
   return (
@@ -339,18 +337,23 @@ function CompanyTab() {
         </div>
         <div className="mt-4 pt-4 border-t border-slate-100">
           <button
-            onClick={() => {
-              if (confirm('This will clear ALL data and reload with seed data. Are you sure?')) {
-                localStorage.removeItem('project_manager_state');
-                window.location.reload();
-              }
-            }}
+            onClick={() => setConfirmReset(true)}
             className="text-sm text-red-500 hover:text-red-700 underline"
           >
             Reset all data to defaults
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        onConfirm={handleResetData}
+        title="Reset All Data"
+        message="This will permanently clear ALL projects, tasks, and members and reload with default seed data. This cannot be undone."
+        confirmLabel="Reset Everything"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -361,6 +364,7 @@ function DepartmentsTab() {
   const [newDept, setNewDept] = useState({ name: '', color: '#6366f1' });
   const [showAddDept, setShowAddDept] = useState(false);
   const [editingDept, setEditingDept] = useState(null);
+  const [deletingDept, setDeletingDept] = useState(null);
 
   function handleAddDept() {
     if (!newDept.name.trim()) return;
@@ -376,9 +380,8 @@ function DepartmentsTab() {
   }
 
   function handleDeleteDept(id) {
-    if (confirm('Delete this department? Members and tasks assigned to it will become unassigned.')) {
-      dispatch({ type: 'DELETE_DEPARTMENT', payload: id });
-    }
+    dispatch({ type: 'DELETE_DEPARTMENT', payload: id });
+    setDeletingDept(null);
   }
 
   return (
@@ -442,7 +445,7 @@ function DepartmentsTab() {
                   </svg>
                 </button>
                 <button
-                  onClick={() => handleDeleteDept(dept.id)}
+                  onClick={() => setDeletingDept(dept)}
                   className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -485,6 +488,16 @@ function DepartmentsTab() {
           <p className="text-sm text-slate-400 text-center py-6">No departments yet. Click Add to create one.</p>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deletingDept}
+        onClose={() => setDeletingDept(null)}
+        onConfirm={() => handleDeleteDept(deletingDept.id)}
+        title="Delete Department"
+        message={`Delete "${deletingDept?.name}"? Members and tasks assigned to it will become unassigned.`}
+        confirmLabel="Delete Department"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -493,26 +506,42 @@ function DepartmentsTab() {
 const UI_COLOR_FIELDS = [
   { key: 'sidebarBg',     label: 'Sidebar Background',  description: 'Main background color of the navigation sidebar.' },
   { key: 'sidebarAccent', label: 'Sidebar Active Item',  description: 'Highlight color for the currently selected menu item.' },
-  { key: 'headerBg',     label: 'Header Background',    description: 'Background color of the top navigation bar.' },
-  { key: 'headerBorder', label: 'Header Border',        description: 'Bottom border color of the top navigation bar.' },
+  { key: 'headerBg',      label: 'Header Background',   description: 'Background color of the top navigation bar.' },
+  { key: 'headerBorder',  label: 'Header Border',       description: 'Bottom border color of the top navigation bar.' },
 ];
 
 function ColorsTab() {
   const { state, dispatch } = useApp();
   const uiColors = state.uiColors ?? defaultUiColors;
 
-  function updateUiColor(key, value) {
-    dispatch({ type: 'UPDATE_UI_COLORS', payload: { [key]: value } });
+  // Local UI color state — only dispatched on "Save Changes"
+  const [localUiColors, setLocalUiColors] = useState(() => ({ ...uiColors }));
+  const [uiColorsSaved, setUiColorsSaved] = useState(false);
+  const [confirmResetUi, setConfirmResetUi] = useState(false);
+
+  function updateLocalUiColor(key, value) {
+    setLocalUiColors(prev => ({ ...prev, [key]: value }));
+    setUiColorsSaved(false);
+  }
+
+  function saveUiColors() {
+    dispatch({ type: 'UPDATE_UI_COLORS', payload: localUiColors });
+    setUiColorsSaved(true);
+    setTimeout(() => setUiColorsSaved(false), 2000);
   }
 
   function resetUiColors() {
+    setLocalUiColors({ ...defaultUiColors });
     dispatch({ type: 'UPDATE_UI_COLORS', payload: defaultUiColors });
+    setUiColorsSaved(false);
   }
 
+  // Completion color config
   const [localConfig, setLocalConfig] = useState(() => ({
     ranges: state.colorConfig.ranges.map(r => ({ ...r })),
   }));
   const [saved, setSaved] = useState(false);
+  const [confirmResetColors, setConfirmResetColors] = useState(false);
 
   function updateRange(index, field, value) {
     setLocalConfig(prev => ({
@@ -551,9 +580,12 @@ function ColorsTab() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-base font-semibold text-slate-800">UI Theme Colors</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Customize the sidebar and header bar colors. Changes apply immediately.</p>
+            <p className="text-sm text-slate-500 mt-0.5">Customize the sidebar and header bar colors.</p>
           </div>
-          <button onClick={resetUiColors} className="text-sm text-slate-500 hover:text-slate-700 underline">
+          <button
+            onClick={() => setConfirmResetUi(true)}
+            className="text-sm text-slate-500 hover:text-slate-700 underline"
+          >
             Reset to defaults
           </button>
         </div>
@@ -561,22 +593,20 @@ function ColorsTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {UI_COLOR_FIELDS.map(({ key, label, description }) => (
             <div key={key} className="flex items-center gap-4 p-3 border border-slate-200 rounded-xl">
-              {/* Swatch + picker */}
               <div className="relative flex-shrink-0">
                 <div
                   className="w-12 h-12 rounded-xl border-2 border-slate-200 overflow-hidden cursor-pointer"
-                  style={{ backgroundColor: uiColors[key] }}
+                  style={{ backgroundColor: localUiColors[key] }}
                 >
                   <input
                     type="color"
-                    value={uiColors[key]}
-                    onChange={e => updateUiColor(key, e.target.value)}
+                    value={localUiColors[key]}
+                    onChange={e => updateLocalUiColor(key, e.target.value)}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                   />
                 </div>
-                <span className="block text-center text-xs text-slate-400 font-mono mt-1">{uiColors[key]}</span>
+                <span className="block text-center text-xs text-slate-400 font-mono mt-1">{localUiColors[key]}</span>
               </div>
-              {/* Label + desc */}
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-700">{label}</p>
                 <p className="text-xs text-slate-400 mt-0.5 leading-snug">{description}</p>
@@ -585,25 +615,23 @@ function ColorsTab() {
           ))}
         </div>
 
-        {/* Live mini-preview */}
+        {/* Live mini-preview using localUiColors */}
         <div className="mt-5">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Preview</p>
           <div className="flex rounded-xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: 72 }}>
-            {/* Sidebar preview */}
-            <div className="flex flex-col justify-between px-2 py-2 w-32 flex-shrink-0" style={{ backgroundColor: uiColors.sidebarBg }}>
+            <div className="flex flex-col justify-between px-2 py-2 w-32 flex-shrink-0" style={{ backgroundColor: localUiColors.sidebarBg }}>
               <div className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded bg-indigo-500 flex-shrink-0" />
                 <span className="text-white text-xs font-bold truncate" style={{ fontSize: 9 }}>ProjectHub</span>
               </div>
               <div className="flex flex-col gap-1">
-                <div className="rounded px-1.5 py-0.5 text-white text-xs" style={{ backgroundColor: uiColors.sidebarAccent, fontSize: 9 }}>Dashboard</div>
+                <div className="rounded px-1.5 py-0.5 text-white text-xs" style={{ backgroundColor: localUiColors.sidebarAccent, fontSize: 9 }}>Dashboard</div>
                 <div className="rounded px-1.5 py-0.5 text-slate-400" style={{ fontSize: 9 }}>Projects</div>
               </div>
             </div>
-            {/* Header + content preview */}
             <div className="flex-1 flex flex-col">
-              <div className="px-3 flex items-center justify-between border-b flex-shrink-0" style={{ backgroundColor: uiColors.headerBg, borderColor: uiColors.headerBorder, height: 28 }}>
-                <span className="text-xs font-semibold" style={{ fontSize: 9, color: uiColors.headerBg === '#ffffff' || parseInt(uiColors.headerBg.replace('#','').substring(0,2),16) > 128 ? '#1e293b' : '#ffffff' }}>Dashboard</span>
+              <div className="px-3 flex items-center justify-between border-b flex-shrink-0" style={{ backgroundColor: localUiColors.headerBg, borderColor: localUiColors.headerBorder, height: 28 }}>
+                <span className="text-xs font-semibold" style={{ fontSize: 9, color: localUiColors.headerBg === '#ffffff' || parseInt(localUiColors.headerBg.replace('#','').substring(0,2),16) > 128 ? '#1e293b' : '#ffffff' }}>Dashboard</span>
                 <div className="w-10 h-3 rounded-full bg-slate-200" />
               </div>
               <div className="flex-1 bg-slate-50 px-3 py-1.5">
@@ -613,8 +641,27 @@ function ColorsTab() {
             </div>
           </div>
         </div>
+
+        {/* Save button */}
+        <div className="flex items-center gap-3 mt-5">
+          <button
+            onClick={saveUiColors}
+            className="px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Save Changes
+          </button>
+          {uiColorsSaved && (
+            <div className="flex items-center gap-1.5 text-green-600 text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Saved!
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Completion Color Ranges */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -623,7 +670,7 @@ function ColorsTab() {
               Configure how task completion percentages map to colors across the app.
             </p>
           </div>
-          <button onClick={handleReset} className="text-sm text-slate-500 hover:text-slate-700 underline">
+          <button onClick={() => setConfirmResetColors(true)} className="text-sm text-slate-500 hover:text-slate-700 underline">
             Reset to defaults
           </button>
         </div>
@@ -725,6 +772,26 @@ function ColorsTab() {
           })}
         </div>
       </div>
+
+      {/* Confirm modals */}
+      <ConfirmModal
+        isOpen={confirmResetUi}
+        onClose={() => setConfirmResetUi(false)}
+        onConfirm={resetUiColors}
+        title="Reset UI Theme Colors"
+        message="This will restore the sidebar and header colors to their original defaults."
+        confirmLabel="Reset to Defaults"
+        variant="warning"
+      />
+      <ConfirmModal
+        isOpen={confirmResetColors}
+        onClose={() => setConfirmResetColors(false)}
+        onConfirm={handleReset}
+        title="Reset Completion Colors"
+        message="This will restore all completion color ranges to their original defaults."
+        confirmLabel="Reset to Defaults"
+        variant="warning"
+      />
     </div>
   );
 }
