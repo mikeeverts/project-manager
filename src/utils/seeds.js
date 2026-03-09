@@ -8,9 +8,16 @@ const d = (offsetDays) => {
   return date.toISOString();
 };
 
+export const SEED_COMPANY_ID = 'company-seed-1';
+
+export const seedCompanies = [
+  { id: SEED_COMPANY_ID, name: 'Demo Company', createdAt: d(-90) },
+];
+
 export const seedProjects = [
   {
     id: 'proj-1',
+    companyId: SEED_COMPANY_ID,
     name: 'Website Redesign',
     description: 'Complete overhaul of the company website with modern design and improved UX',
     color: '#6366f1',
@@ -18,6 +25,7 @@ export const seedProjects = [
   },
   {
     id: 'proj-2',
+    companyId: SEED_COMPANY_ID,
     name: 'Mobile App',
     description: 'Native mobile application for iOS and Android platforms',
     color: '#f59e0b',
@@ -25,6 +33,7 @@ export const seedProjects = [
   },
   {
     id: 'proj-3',
+    companyId: SEED_COMPANY_ID,
     name: 'Q1 Marketing Campaign',
     description: 'Multi-channel marketing campaign for Q1 product launch',
     color: '#10b981',
@@ -41,52 +50,62 @@ export const seedDepartments = [
 export const seedTeamMembers = [
   {
     id: 'member-1',
+    companyId: SEED_COMPANY_ID,
     name: 'Alice Johnson',
     email: 'alice@example.com',
     avatarColor: '#6366f1',
     role: 'admin',
     password: hashPassword('alice123'),
     departmentId: 'dept-1',
+    isDisabled: false,
     createdAt: d(-60),
   },
   {
     id: 'member-2',
+    companyId: SEED_COMPANY_ID,
     name: 'Bob Smith',
     email: 'bob@example.com',
     avatarColor: '#f59e0b',
     role: 'project_manager',
     password: hashPassword('bob123'),
     departmentId: 'dept-1',
+    isDisabled: false,
     createdAt: d(-55),
   },
   {
     id: 'member-3',
+    companyId: SEED_COMPANY_ID,
     name: 'Carol Davis',
     email: 'carol@example.com',
     avatarColor: '#10b981',
     role: 'user',
     password: hashPassword('carol123'),
     departmentId: 'dept-2',
+    isDisabled: false,
     createdAt: d(-50),
   },
   {
     id: 'member-4',
+    companyId: SEED_COMPANY_ID,
     name: 'David Lee',
     email: 'david@example.com',
     avatarColor: '#ef4444',
     role: 'user',
     password: hashPassword('david123'),
     departmentId: 'dept-3',
+    isDisabled: false,
     createdAt: d(-45),
   },
   {
     id: 'member-5',
+    companyId: SEED_COMPANY_ID,
     name: 'Eva Martinez',
     email: 'eva@example.com',
     avatarColor: '#8b5cf6',
     role: 'project_manager',
     password: hashPassword('eva123'),
     departmentId: 'dept-3',
+    isDisabled: false,
     createdAt: d(-40),
   },
 ];

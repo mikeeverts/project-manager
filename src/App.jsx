@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
+import SetupWizard from './pages/SetupWizard';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
@@ -14,7 +15,13 @@ import Settings from './pages/Settings';
 
 function AppGate() {
   const { state } = useApp();
+
+  // First-time setup: no companies configured yet
+  if (state.companies.length === 0) return <SetupWizard />;
+
+  // Not logged in: show login
   if (!state.currentUser) return <Login />;
+
   return (
     <Routes>
       <Route element={<Layout />}>
