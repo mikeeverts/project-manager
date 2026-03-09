@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { seedProjects, seedTeamMembers, seedTasks, seedDepartments, defaultColorConfig } from '../utils/seeds';
 
 const STORAGE_KEY = 'project_manager_state';
@@ -12,6 +12,8 @@ const initialState = {
   companyName: 'ProjectHub',
   companyLogo: null,
   darkMode: false,
+  filterProject: 'all',
+  sidebarCollapsed: false,
 };
 
 function loadState() {
@@ -117,6 +119,10 @@ function reducer(state, action) {
       return { ...state, companyLogo: action.payload };
     case 'TOGGLE_DARK_MODE':
       return { ...state, darkMode: !state.darkMode };
+    case 'SET_FILTER_PROJECT':
+      return { ...state, filterProject: action.payload };
+    case 'TOGGLE_SIDEBAR':
+      return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
 
     default:
       return state;
@@ -139,16 +145,16 @@ export function AppProvider({ children }) {
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
     darkMode: saved?.darkMode ?? false,
+    filterProject: saved?.filterProject ?? 'all',
+    sidebarCollapsed: saved?.sidebarCollapsed ?? false,
   });
-
-  const [filterProject, setFilterProject] = useState('all');
 
   useEffect(() => {
     saveState(state);
   }, [state]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch, filterProject, setFilterProject }}>
+    <AppContext.Provider value={{ state, dispatch }}>
       {children}
     </AppContext.Provider>
   );

@@ -29,19 +29,23 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [taskModal, setTaskModal] = useState(false);
 
-  const overdueTasks = state.tasks.filter(t => isOverdue(t.dueDate) && t.status !== 'done');
-  const dueSoonTasks = state.tasks.filter(t => {
+  const filteredTasks = state.filterProject === 'all'
+    ? state.tasks
+    : state.tasks.filter(t => t.projectId === state.filterProject);
+
+  const overdueTasks = filteredTasks.filter(t => isOverdue(t.dueDate) && t.status !== 'done');
+  const dueSoonTasks = filteredTasks.filter(t => {
     const due = new Date(t.dueDate);
     const now = new Date();
     const in7 = new Date(now.getTime() + 7 * 86400000);
     return due >= now && due <= in7 && t.status !== 'done';
   });
 
-  const recentTasks = [...state.tasks]
+  const recentTasks = [...filteredTasks]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
 
-  const inProgressTasks = state.tasks.filter(t => t.status === 'in-progress');
+  const inProgressTasks = filteredTasks.filter(t => t.status === 'in-progress');
 
   return (
     <div className="p-6 space-y-6">
@@ -57,7 +61,7 @@ export default function Dashboard() {
         <StatCard
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
           label="Total Tasks"
-          value={state.tasks.length}
+          value={filteredTasks.length}
           color="#f59e0b"
           onClick={() => navigate('/board')}
         />

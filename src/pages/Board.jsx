@@ -156,7 +156,8 @@ function Column({ column, tasks, onCardClick, onAddTask }) {
 }
 
 export default function Board() {
-  const { state, dispatch, filterProject } = useApp();
+  const { state, dispatch } = useApp();
+  const filterProject = state.filterProject;
   const [editTask, setEditTask] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState('todo');

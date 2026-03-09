@@ -13,7 +13,7 @@ const pageTitles = {
   '/tasks/new': 'New Task',
 };
 
-const FILTER_PAGES = ['/board', '/calendar', '/gantt'];
+const FILTER_PAGES = ['/', '/board', '/calendar', '/gantt'];
 
 function getTitle(pathname) {
   if (pageTitles[pathname]) return pageTitles[pathname];
@@ -24,7 +24,7 @@ function getTitle(pathname) {
 
 export default function Header() {
   const location = useLocation();
-  const { state, dispatch, filterProject, setFilterProject } = useApp();
+  const { state, dispatch } = useApp();
   const title = getTitle(location.pathname);
   const showProjectFilter = FILTER_PAGES.includes(location.pathname);
 
@@ -39,8 +39,8 @@ export default function Header() {
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
             </svg>
             <select
-              value={filterProject}
-              onChange={e => setFilterProject(e.target.value)}
+              value={state.filterProject}
+              onChange={e => dispatch({ type: 'SET_FILTER_PROJECT', payload: e.target.value })}
               className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="all">All Projects</option>

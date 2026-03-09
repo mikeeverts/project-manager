@@ -21,7 +21,8 @@ function getTaskPosition(task, minDate) {
 }
 
 export default function Gantt() {
-  const { state, dispatch, filterProject } = useApp();
+  const { state, dispatch } = useApp();
+  const filterProject = state.filterProject;
   const [editTask, setEditTask] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
   const [filterMember, setFilterMember] = useState('all');

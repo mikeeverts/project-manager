@@ -19,7 +19,8 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function Calendar() {
-  const { state, filterProject } = useApp();
+  const { state } = useApp();
+  const filterProject = state.filterProject;
   const [editTask, setEditTask] = useState(null);
   const [taskModal, setTaskModal] = useState(false);
   const [view, setView] = useState('month');
