@@ -311,14 +311,28 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
 
         {/* Completion */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Completion: {form.completionPercentage}%
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-slate-700">Completion</label>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={form.completionPercentage}
+                onChange={e => {
+                  const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                  set('completionPercentage', isNaN(v) ? 0 : v);
+                }}
+                className="w-16 border border-slate-300 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <span className="text-sm text-slate-500">%</span>
+            </div>
+          </div>
           <input
             type="range"
             min="0"
             max="100"
-            step="5"
+            step="1"
             value={form.completionPercentage}
             onChange={e => set('completionPercentage', Number(e.target.value))}
             className="w-full accent-indigo-600"
