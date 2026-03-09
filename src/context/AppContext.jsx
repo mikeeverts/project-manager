@@ -139,6 +139,16 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
   const saved = loadState();
 
+  // Migrate saved team members: if any member is missing a password,
+  // fill it in from the seed data (handles upgrades from pre-auth versions).
+  const migratedMembers = saved?.teamMembers
+    ? saved.teamMembers.map(m => {
+        if (m.password) return m;
+        const seed = seedTeamMembers.find(s => s.id === m.id);
+        return seed ? { ...m, password: seed.password, role: seed.role } : m;
+      })
+    : null;
+
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     projects: seedProjects,
@@ -146,6 +156,7 @@ export function AppProvider({ children }) {
     tasks: seedTasks,
     departments: seedDepartments,
     ...(saved || {}),
+    teamMembers: migratedMembers ?? seedTeamMembers,
     departments: saved?.departments ?? seedDepartments,
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
