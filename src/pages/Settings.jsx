@@ -81,32 +81,77 @@ export default function Settings() {
 
   return (
     <div className="p-6 max-w-3xl">
-      {/* Company Name */}
+      {/* Company Name & Logo */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-1">Company Name</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-1">Company</h2>
         <p className="text-sm text-slate-500 mb-4">Shown in the sidebar and browser tab title.</p>
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            value={companyName}
-            onChange={e => { setCompanyName(e.target.value); setCompanySaved(false); }}
-            placeholder="Your company name"
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-72"
-          />
-          <button
-            onClick={handleSaveCompany}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            Save
-          </button>
-          {companySaved && (
-            <div className="flex items-center gap-1.5 text-green-600 text-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Saved!
+
+        <div className="flex items-start gap-6">
+          {/* Logo upload */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-xl border-2 border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
+              {state.companyLogo ? (
+                <img src={state.companyLogo} alt="Company logo" className="w-full h-full object-contain" />
+              ) : (
+                <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
             </div>
-          )}
+            <label className="cursor-pointer text-xs text-indigo-600 hover:text-indigo-700 font-medium text-center">
+              {state.companyLogo ? 'Change' : 'Upload'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = ev => dispatch({ type: 'UPDATE_COMPANY_LOGO', payload: ev.target.result });
+                  reader.readAsDataURL(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+            <span className="text-xs text-slate-400 text-center">128×128px<br/>PNG or SVG</span>
+            {state.companyLogo && (
+              <button
+                onClick={() => dispatch({ type: 'UPDATE_COMPANY_LOGO', payload: null })}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {/* Name + save */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={companyName}
+                onChange={e => { setCompanyName(e.target.value); setCompanySaved(false); }}
+                placeholder="Your company name"
+                className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
+              />
+              <button
+                onClick={handleSaveCompany}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Save
+              </button>
+              {companySaved && (
+                <div className="flex items-center gap-1.5 text-green-600 text-sm">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved!
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

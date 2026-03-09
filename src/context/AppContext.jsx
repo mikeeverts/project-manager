@@ -10,6 +10,8 @@ const initialState = {
   departments: [],
   colorConfig: defaultColorConfig,
   companyName: 'ProjectHub',
+  companyLogo: null,
+  darkMode: false,
 };
 
 function loadState() {
@@ -111,6 +113,10 @@ function reducer(state, action) {
     // Company
     case 'UPDATE_COMPANY_NAME':
       return { ...state, companyName: action.payload };
+    case 'UPDATE_COMPANY_LOGO':
+      return { ...state, companyLogo: action.payload };
+    case 'TOGGLE_DARK_MODE':
+      return { ...state, darkMode: !state.darkMode };
 
     default:
       return state;
@@ -131,6 +137,8 @@ export function AppProvider({ children }) {
     ...(saved || {}),
     departments: saved?.departments ?? seedDepartments,
     companyName: saved?.companyName ?? 'ProjectHub',
+    companyLogo: saved?.companyLogo ?? null,
+    darkMode: saved?.darkMode ?? false,
   });
 
   const [filterProject, setFilterProject] = useState('all');
