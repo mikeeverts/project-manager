@@ -9,6 +9,14 @@ export default function Settings() {
     ranges: state.colorConfig.ranges.map(r => ({ ...r })),
   }));
   const [saved, setSaved] = useState(false);
+  const [companyName, setCompanyName] = useState(state.companyName || 'ProjectHub');
+  const [companySaved, setCompanySaved] = useState(false);
+
+  function handleSaveCompany() {
+    dispatch({ type: 'UPDATE_COMPANY_NAME', payload: companyName.trim() || 'ProjectHub' });
+    setCompanySaved(true);
+    setTimeout(() => setCompanySaved(false), 2000);
+  }
 
   function updateRange(index, field, value) {
     setLocalConfig(prev => ({
@@ -43,6 +51,35 @@ export default function Settings() {
 
   return (
     <div className="p-6 max-w-3xl">
+      {/* Company Name */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+        <h2 className="text-lg font-semibold text-slate-800 mb-1">Company Name</h2>
+        <p className="text-sm text-slate-500 mb-4">Shown in the sidebar and browser tab title.</p>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={companyName}
+            onChange={e => { setCompanyName(e.target.value); setCompanySaved(false); }}
+            placeholder="Your company name"
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-72"
+          />
+          <button
+            onClick={handleSaveCompany}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Save
+          </button>
+          {companySaved && (
+            <div className="flex items-center gap-1.5 text-green-600 text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Saved!
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
           <div>

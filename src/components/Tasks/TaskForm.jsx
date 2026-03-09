@@ -39,6 +39,7 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
   const { state, dispatch } = useApp();
   const [form, setForm] = useState(emptyForm(defaultProjectId, defaultStatus));
   const [errors, setErrors] = useState({});
+  const [assignType, setAssignType] = useState('user');
 
   useEffect(() => {
     if (isOpen) {
@@ -56,8 +57,10 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
           dependencies: task.dependencies || [],
           priority: task.priority || 'medium',
         });
+        setAssignType(task.departmentId ? 'department' : 'user');
       } else {
         setForm(emptyForm(defaultProjectId, defaultStatus));
+        setAssignType('user');
       }
       setErrors({});
     }
@@ -160,24 +163,24 @@ export default function TaskForm({ isOpen, onClose, task = null, defaultProjectI
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 mb-2 w-fit">
             <button
               type="button"
-              onClick={() => { set('departmentId', ''); }}
+              onClick={() => { setAssignType('user'); set('departmentId', ''); }}
               className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-                !form.departmentId ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                assignType === 'user' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               User
             </button>
             <button
               type="button"
-              onClick={() => { set('assigneeId', ''); }}
+              onClick={() => { setAssignType('department'); set('assigneeId', ''); }}
               className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-                form.departmentId ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                assignType === 'department' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               Department
             </button>
           </div>
-          {!form.departmentId ? (
+          {assignType === 'user' ? (
             <select
               value={form.assigneeId}
               onChange={e => set('assigneeId', e.target.value)}

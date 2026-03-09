@@ -9,6 +9,7 @@ const initialState = {
   tasks: [],
   departments: [],
   colorConfig: defaultColorConfig,
+  companyName: 'ProjectHub',
 };
 
 function loadState() {
@@ -107,6 +108,10 @@ function reducer(state, action) {
     case 'UPDATE_COLOR_CONFIG':
       return { ...state, colorConfig: action.payload };
 
+    // Company
+    case 'UPDATE_COMPANY_NAME':
+      return { ...state, companyName: action.payload };
+
     default:
       return state;
   }
@@ -117,12 +122,15 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
   const saved = loadState();
 
-  const [state, dispatch] = useReducer(reducer, saved || {
+  const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     projects: seedProjects,
     teamMembers: seedTeamMembers,
     tasks: seedTasks,
     departments: seedDepartments,
+    ...(saved || {}),
+    departments: saved?.departments ?? seedDepartments,
+    companyName: saved?.companyName ?? 'ProjectHub',
   });
 
   const [filterProject, setFilterProject] = useState('all');
