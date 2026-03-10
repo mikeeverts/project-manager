@@ -27,32 +27,6 @@ function LoadingScreen() {
   );
 }
 
-function ErrorScreen({ error }) {
-  return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-8 max-w-md w-full text-center">
-        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h2 className="text-base font-semibold text-slate-800 mb-2">Cannot reach server</h2>
-        <p className="text-sm text-slate-500 mb-4">{error}</p>
-        <p className="text-xs text-slate-400">
-          Make sure the ProjectHub server is running (<code className="font-mono">node server/index.js</code>)
-          and try refreshing.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-        >
-          Retry
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function AppGate() {
   const { state, apiStatus, reinitialize } = useApp();
@@ -61,29 +35,11 @@ function AppGate() {
   // 0. Still loading from API
   if (apiStatus.loading) return <LoadingScreen />;
 
-  // 0a. Server unreachable
-  if (apiStatus.error) return <ErrorScreen error={apiStatus.error} />;
+  // 1. No DB connection or not configured — show setup page
+  if (apiStatus.error || !apiStatus.dbConfigured) return <DatabaseSetup onComplete={reinitialize} />;
 
-  // 1. Not logged in — always show Login first.
-  //    When DB is not yet configured, AppContext keeps the default
-  //    siteOwner (admin / admin) so the site admin can still get in.
+  // 2. Not logged in
   if (!currentUser) return <Login />;
-
-  // 2. DB not yet configured — only the site admin can set it up
-  if (!apiStatus.dbConfigured) {
-    if (currentUser.isSuperAdmin) return <DatabaseSetup onComplete={reinitialize} />;
-    // Regular users can't use the app without a database
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-sm text-center">
-          <p className="text-slate-700 font-medium mb-1">Database not configured</p>
-          <p className="text-sm text-slate-500">Contact your site administrator to complete setup.</p>
-          <button onClick={() => dispatch({ type: 'LOGOUT' })}
-            className="mt-4 text-sm text-indigo-600 hover:underline">Sign out</button>
-        </div>
-      </div>
-    );
-  }
 
   // 3. First-time setup: no companies and not super-admin
   if (companies.length === 0 && !currentUser?.isSuperAdmin) return <SetupWizard />;
