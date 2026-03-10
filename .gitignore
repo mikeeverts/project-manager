@@ -1,3 +1,6 @@
+# Database credentials — never commit
+server/db-config.json
+
 # Logs
 logs
 *.log
