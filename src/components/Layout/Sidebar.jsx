@@ -79,8 +79,16 @@ const navItems = [
 export default function Sidebar() {
   const { state, dispatch } = useApp();
   const companyName = state.companyName || 'ProjectHub';
-  const collapsed = state.sidebarCollapsed;
   const { sidebarBg, sidebarAccent } = state.uiColors ?? {};
+
+  // Auto-collapse on mobile; preserve the user's saved preference on desktop
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const collapsed = isMobile || state.sidebarCollapsed;
 
   useEffect(() => {
     document.title = companyName;
@@ -183,7 +191,7 @@ export default function Sidebar() {
 
         {/* Collapse toggle */}
         <div className={`flex ${collapsed ? 'justify-center' : 'items-center justify-between px-2'}`}>
-          {!collapsed && <p className="text-slate-500 text-xs">v2.006</p>}
+          {!collapsed && <p className="text-slate-500 text-xs">v2.007</p>}
           <button
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"

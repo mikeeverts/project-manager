@@ -50,14 +50,14 @@ export default function ProjectDetail() {
     setDeleteTask(null);
   }
 
+  const isClosed = project.status === 'closed';
+
   function toggleClosed() {
     dispatch({
       type: 'UPDATE_PROJECT',
       payload: { ...project, status: isClosed ? 'active' : 'closed' },
     });
   }
-
-  const isClosed = project.status === 'closed';
 
   return (
     <div className="p-6">

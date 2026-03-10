@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('POST /api/tasks:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -68,7 +68,7 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('PUT /api/tasks/:id:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -83,7 +83,7 @@ router.patch('/:id/status', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('PATCH /api/tasks/:id/status:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -96,7 +96,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('DELETE /api/tasks/:id:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 

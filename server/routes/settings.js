@@ -46,7 +46,7 @@ router.put('/', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('PUT /api/settings:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -65,7 +65,7 @@ router.put('/site-owner', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('PUT /api/settings/site-owner:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 

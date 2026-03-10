@@ -66,13 +66,13 @@ export default function SetupWizard() {
         avatarColor,
         departmentId: null,
         isDisabled: false,
+        mustChangePassword: false,
         createdAt: new Date().toISOString(),
       },
     });
 
     if (loadDemo) {
       // Load demo data re-keyed to this company
-      seedCompanies; // already dispatched above
       seedTeamMembers.forEach(m => {
         dispatch({ type: 'ADD_MEMBER', payload: { ...m, companyId, id: uuidv4(), email: m.email.replace('@example.com', `@${companyId.slice(0,6)}.demo`) } });
       });

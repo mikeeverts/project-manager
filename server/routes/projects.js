@@ -34,7 +34,7 @@ router.post('/', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('POST /api/projects:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -54,7 +54,7 @@ router.put('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('PUT /api/projects/:id:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 
@@ -67,7 +67,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('DELETE /api/projects/:id:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ message: e.message });
   }
 });
 

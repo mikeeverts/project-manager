@@ -1,6 +1,9 @@
 # Database credentials — never commit
 server/db-config.json
 
+# Local test/debug scripts (may contain credentials)
+test-*.js
+
 # Logs
 logs
 *.log

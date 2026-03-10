@@ -176,6 +176,7 @@ export default function Team() {
         id: uuidv4(),
         companyId: state.impersonatedCompanyId ?? state.currentUser?.companyId,
         isDisabled: false,
+        mustChangePassword: true,
         createdAt: new Date().toISOString(),
       },
     });
