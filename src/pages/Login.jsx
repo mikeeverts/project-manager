@@ -79,7 +79,7 @@ export default function Login() {
             )}
           </div>
           <h1 className="text-2xl font-bold text-slate-800">
-            {selectedCompany ? selectedCompany.name : 'ProjectHub'}
+            {state.companyName || 'ProjectHub'}
           </h1>
           <p className="text-slate-500 text-sm mt-1">Sign in to your account</p>
         </div>
@@ -143,8 +143,8 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Credentials hint for selected company */}
-        {selectedCompanyId && companyMembers.length > 0 && (
+        {/* Credentials hint — only shown before site admin has changed default password */}
+        {state.siteOwner?.mustChangePassword && selectedCompanyId && companyMembers.length > 0 && (
           <div className="mt-4">
             <button
               onClick={() => setShowHints(h => !h)}
