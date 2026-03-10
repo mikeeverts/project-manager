@@ -1,6 +1,6 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { saveConfig } from '../config.js';
+import { saveConfig, deleteConfig } from '../config.js';
 import { getPool, resetPool, sql } from '../db.js';
 import { SCHEMA_STATEMENTS } from '../schema.js';
 import { insertSeedData } from '../seed.js';
@@ -142,39 +142,22 @@ router.post('/seed', async (req, res) => {
   }
 });
 
-// POST /api/db/create-account — create first company + admin user
-router.post('/create-account', async (req, res) => {
-  const { companyName, name, email, password } = req.body;
-  if (!companyName || !name || !email || !password)
-    return res.status(400).json({ message: 'All fields are required.' });
-
-  const companyId = uuidv4();
-  const memberId  = uuidv4();
-  const now       = new Date();
-
+// POST /api/db/reset — wipe all data and remove DB config to restart setup
+router.post('/reset', async (req, res) => {
   try {
     const pool = await getPool();
-
-    await pool.request()
-      .input('id',        sql.NVarChar,      companyId)
-      .input('name',      sql.NVarChar,      companyName)
-      .input('createdAt', sql.DateTimeOffset, now)
-      .query('INSERT INTO companies (id, name, created_at) VALUES (@id, @name, @createdAt)');
-
-    await pool.request()
-      .input('id',          sql.NVarChar,      memberId)
-      .input('companyId',   sql.NVarChar,      companyId)
-      .input('name',        sql.NVarChar,      name)
-      .input('email',       sql.NVarChar,      email)
-      .input('avatarColor', sql.NVarChar,      '#6366f1')
-      .input('role',        sql.NVarChar,      'admin')
-      .input('password',    sql.NVarChar,      hashPassword(password))
-      .input('createdAt',   sql.DateTimeOffset, now)
-      .query(`INSERT INTO team_members
-        (id, company_id, name, email, avatar_color, role, password, is_disabled, created_at)
-        VALUES (@id, @companyId, @name, @email, @avatarColor, @role, @password, 0, @createdAt)`);
-
-    res.json({ success: true, message: 'Account created successfully.' });
+    await pool.request().query('DELETE FROM task_dependencies');
+    await pool.request().query('DELETE FROM tasks');
+    await pool.request().query('DELETE FROM project_members');
+    await pool.request().query('DELETE FROM projects');
+    await pool.request().query('DELETE FROM team_members');
+    await pool.request().query('DELETE FROM departments');
+    await pool.request().query('DELETE FROM companies');
+    await pool.request().query('DELETE FROM site_settings');
+    await pool.close();
+    await deleteConfig();
+    await resetPool();
+    res.json({ success: true, message: 'Database cleared successfully.' });
   } catch (e) {
     res.status(500).json({ message: friendlyError(e) });
   }

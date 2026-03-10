@@ -16,11 +16,12 @@ router.post('/', async (req, res) => {
       .input('role',         sql.NVarChar,      m.role)
       .input('password',     sql.NVarChar,      m.password)
       .input('departmentId', sql.NVarChar,      m.departmentId || null)
-      .input('isDisabled',   sql.Bit,           m.isDisabled ? 1 : 0)
-      .input('createdAt',    sql.DateTimeOffset, new Date(m.createdAt))
+      .input('isDisabled',         sql.Bit,           m.isDisabled ? 1 : 0)
+      .input('mustChangePassword', sql.Bit,           m.mustChangePassword ? 1 : 0)
+      .input('createdAt',          sql.DateTimeOffset, new Date(m.createdAt))
       .query(`INSERT INTO team_members
-        (id, company_id, name, email, avatar_color, role, password, department_id, is_disabled, created_at)
-        VALUES (@id, @companyId, @name, @email, @avatarColor, @role, @password, @departmentId, @isDisabled, @createdAt)`);
+        (id, company_id, name, email, avatar_color, role, password, department_id, is_disabled, must_change_password, created_at)
+        VALUES (@id, @companyId, @name, @email, @avatarColor, @role, @password, @departmentId, @isDisabled, @mustChangePassword, @createdAt)`);
     res.json({ success: true });
   } catch (e) {
     console.error('POST /api/members:', e.message);
@@ -40,10 +41,12 @@ router.put('/:id', async (req, res) => {
       .input('role',         sql.NVarChar, m.role)
       .input('password',     sql.NVarChar, m.password)
       .input('departmentId', sql.NVarChar, m.departmentId || null)
-      .input('isDisabled',   sql.Bit,      m.isDisabled ? 1 : 0)
+      .input('isDisabled',         sql.Bit, m.isDisabled ? 1 : 0)
+      .input('mustChangePassword', sql.Bit, m.mustChangePassword ? 1 : 0)
       .query(`UPDATE team_members SET
         name = @name, email = @email, avatar_color = @avatarColor, role = @role,
-        password = @password, department_id = @departmentId, is_disabled = @isDisabled
+        password = @password, department_id = @departmentId, is_disabled = @isDisabled,
+        must_change_password = @mustChangePassword
         WHERE id = @id`);
     res.json({ success: true });
   } catch (e) {

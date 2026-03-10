@@ -44,8 +44,8 @@ function AppGate() {
   // 3. First-time setup: no companies and not super-admin
   if (companies.length === 0 && !currentUser?.isSuperAdmin) return <SetupWizard />;
 
-  // 4. Super-admin must change default password (only after DB is ready)
-  if (currentUser.isSuperAdmin && currentUser.mustChangePassword) return <ChangePassword />;
+  // 4. Any user must change their default password before continuing
+  if (currentUser.mustChangePassword) return <ChangePassword />;
 
   // 5. Super-admin not impersonating → company management dashboard
   if (currentUser.isSuperAdmin && !impersonatedCompanyId) return <SuperAdminDashboard />;

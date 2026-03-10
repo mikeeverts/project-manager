@@ -36,11 +36,8 @@ export default function DatabaseSetup({ onComplete }) {
   const [testMsg, setTestMsg]       = useState('');
   const [setupStatus, setSetupStatus] = useState(null); // null | 'running' | 'ok' | 'fail'
   const [setupMsg, setSetupMsg]       = useState('');
-  const [seedStatus, setSeedStatus]     = useState(null); // null | 'loading' | 'ok' | 'fail'
-  const [seedMsg, setSeedMsg]           = useState('');
-  const [account, setAccount]           = useState({ companyName: '', name: '', email: '', password: '', confirm: '' });
-  const [accountStatus, setAccountStatus] = useState(null); // null | 'saving' | 'ok' | 'fail'
-  const [accountMsg, setAccountMsg]     = useState('');
+  const [seedStatus, setSeedStatus] = useState(null); // null | 'loading' | 'ok' | 'fail'
+  const [seedMsg, setSeedMsg]       = useState('');
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -79,29 +76,6 @@ export default function DatabaseSetup({ onComplete }) {
           ? 'Cannot reach the ProjectHub server. Make sure it is running (npm run dev).'
           : e.message
       );
-    }
-  }
-
-  async function handleCreateAccount() {
-    if (account.password !== account.confirm) {
-      setAccountStatus('fail');
-      setAccountMsg('Passwords do not match.');
-      return;
-    }
-    setAccountStatus('saving');
-    setAccountMsg('');
-    try {
-      const result = await api.post('/db/create-account', {
-        companyName: account.companyName,
-        name:        account.name,
-        email:       account.email,
-        password:    account.password,
-      });
-      setAccountStatus('ok');
-      setAccountMsg(result.message || 'Account created.');
-    } catch (e) {
-      setAccountStatus('fail');
-      setAccountMsg(e.message);
     }
   }
 
@@ -244,60 +218,13 @@ export default function DatabaseSetup({ onComplete }) {
             <StatusBadge status={setupStatus === 'running' ? 'running' : setupStatus} msg={setupMsg} />
           </div>
 
-          {/* ── Step 3: Create your account ───────────────────────────────── */}
+          {/* ── Step 3: Load demo data (optional) ─────────────────────────── */}
           {step === 'done' && (
             <>
               <hr className="border-slate-100" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
-                  3 · Create Your Account
-                </h2>
-                <p className="text-xs text-slate-400 mb-4">
-                  Creates your company and a company admin account so you can log in straight away.
-                </p>
-                <div className="space-y-3">
-                  <Field label="Company Name" name="companyName" value={account.companyName}
-                    onChange={e => setAccount(a => ({ ...a, companyName: e.target.value }))}
-                    placeholder="Acme Corp" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Your Name" name="name" value={account.name}
-                      onChange={e => setAccount(a => ({ ...a, name: e.target.value }))}
-                      placeholder="Jane Smith" />
-                    <Field label="Email" name="email" value={account.email}
-                      onChange={e => setAccount(a => ({ ...a, email: e.target.value }))}
-                      placeholder="jane@company.com" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Password" name="password" type="password" value={account.password}
-                      onChange={e => setAccount(a => ({ ...a, password: e.target.value }))}
-                      placeholder="••••••••" />
-                    <Field label="Confirm Password" name="confirm" type="password" value={account.confirm}
-                      onChange={e => setAccount(a => ({ ...a, confirm: e.target.value }))}
-                      placeholder="••••••••" />
-                  </div>
-                </div>
-                <button
-                  onClick={handleCreateAccount}
-                  disabled={accountStatus === 'saving' || accountStatus === 'ok' || !account.companyName || !account.name || !account.email || !account.password}
-                  className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                >
-                  {accountStatus === 'saving' ? (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  ) : null}
-                  {accountStatus === 'ok' ? '✓ Account Created' : 'Create Account'}
-                </button>
-                <StatusBadge status={accountStatus === 'saving' ? 'running' : accountStatus} msg={accountMsg} />
-              </div>
-            </>
-          )}
-
-          {/* ── Step 4: Load demo data (optional) ─────────────────────────── */}
-          {step === 'done' && accountStatus === 'ok' && (
-            <>
-              <hr className="border-slate-100" />
-              <div>
-                <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
-                  4 · Load Demo Data <span className="text-slate-400 font-normal normal-case">(optional)</span>
+                  3 · Load Demo Data <span className="text-slate-400 font-normal normal-case">(optional)</span>
                 </h2>
                 <p className="text-xs text-slate-400 mb-4">
                   Inserts sample companies, team members, projects, and tasks so you can explore the app right away.

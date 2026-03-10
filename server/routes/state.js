@@ -48,13 +48,14 @@ router.get('/', async (req, res) => {
     // ── Team members ──────────────────────────────────────────────────────────
     const membersRes = await pool.request().query(
       `SELECT id, company_id, name, email, avatar_color, role, password,
-              department_id, is_disabled, created_at
+              department_id, is_disabled, must_change_password, created_at
        FROM team_members ORDER BY created_at`
     );
     const teamMembers = membersRes.recordset.map(r => ({
       id: r.id, companyId: r.company_id, name: r.name, email: r.email,
       avatarColor: r.avatar_color, role: r.role, password: r.password,
       departmentId: r.department_id, isDisabled: !!r.is_disabled,
+      mustChangePassword: !!r.must_change_password,
       createdAt: toIso(r.created_at),
     }));
 

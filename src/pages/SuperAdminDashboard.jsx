@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
+import { api } from '../api/client.js';
 import ConfirmModal from '../components/UI/ConfirmModal';
 import TestRunner from './TestRunner';
 
@@ -43,10 +44,12 @@ function CompanyForm({ company, onSave, onClose }) {
 }
 
 export default function SuperAdminDashboard() {
-  const { rawState, dispatch } = useApp();
+  const { rawState, dispatch, reinitialize } = useApp();
   const [showCreate, setShowCreate] = useState(false);
   const [editCompany, setEditCompany] = useState(null);
   const [deleteCompany, setDeleteCompany] = useState(null);
+  const [showReset, setShowReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [activeView, setActiveView] = useState('companies'); // 'companies' | 'tests'
 
   if (activeView === 'tests') {
@@ -89,6 +92,18 @@ export default function SuperAdminDashboard() {
     dispatch({ type: 'LOGOUT' });
   }
 
+  async function handleReset() {
+    setResetting(true);
+    try {
+      await api.post('/db/reset', {});
+      await reinitialize();
+    } catch (e) {
+      alert('Reset failed: ' + e.message);
+      setResetting(false);
+      setShowReset(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top bar */}
@@ -106,6 +121,15 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowReset(true)}
+            className="flex items-center gap-1.5 text-xs font-medium text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Reset Database
+          </button>
           <button
             onClick={() => setActiveView('tests')}
             className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
@@ -268,6 +292,16 @@ export default function SuperAdminDashboard() {
           ? `Delete "${deleteCompany.name}"? This will permanently remove all members, projects, and tasks for this company.`
           : ''}
         confirmLabel="Delete Company"
+        variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={showReset}
+        onClose={() => !resetting && setShowReset(false)}
+        onConfirm={handleReset}
+        title="Reset Database"
+        message="This will permanently delete ALL data — companies, users, projects, and tasks. The app will return to the initial database setup screen. This cannot be undone."
+        confirmLabel={resetting ? 'Resetting…' : 'Reset Everything'}
         variant="danger"
       />
     </div>

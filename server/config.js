@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, unlink } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -29,4 +29,9 @@ export function getDbConfig() {
 export async function saveConfig(config) {
   cachedConfig = config;
   await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
+}
+
+export async function deleteConfig() {
+  cachedConfig = null;
+  try { await unlink(CONFIG_PATH); } catch { /* ignore if missing */ }
 }

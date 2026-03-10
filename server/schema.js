@@ -45,11 +45,16 @@ export const SCHEMA_STATEMENTS = [
      role          NVARCHAR(50)  NOT NULL DEFAULT 'user',
      password      NVARCHAR(255) NOT NULL,
      department_id NVARCHAR(50)      NULL,
-     is_disabled   BIT           NOT NULL DEFAULT 0,
-     created_at    DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+     is_disabled          BIT           NOT NULL DEFAULT 0,
+     must_change_password BIT           NOT NULL DEFAULT 1,
+     created_at           DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
      CONSTRAINT FK_team_members_company FOREIGN KEY (company_id)
        REFERENCES companies(id) ON DELETE CASCADE
    )`,
+
+  // Add must_change_password to existing team_members tables (idempotent)
+  `IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('team_members') AND name = 'must_change_password')
+   ALTER TABLE team_members ADD must_change_password BIT NOT NULL DEFAULT 1`,
 
   `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='projects' AND xtype='U')
    CREATE TABLE projects (
