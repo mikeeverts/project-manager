@@ -27,9 +27,9 @@ export async function syncAction(action) {
       case 'UPDATE_COMPANY_LOGO':
         return api.put('/settings', { companyLogo: action.payload });
       case 'SET_THEME_MODE':
-        return api.put('/settings', { themeMode: action.payload });
+        return api.put('/settings', { themeMode: action.payload, uiColors: action._uiColors });
       case 'TOGGLE_DARK_MODE':
-        return api.put('/settings', { themeMode: action._themeMode });
+        return api.put('/settings', { themeMode: action._themeMode, uiColors: action._uiColors });
       case 'TOGGLE_SIDEBAR':
         return api.put('/settings', { sidebarCollapsed: action._collapsed });
       case 'SET_FILTER_PROJECT':

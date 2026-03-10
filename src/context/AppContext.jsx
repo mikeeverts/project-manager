@@ -10,6 +10,14 @@ export const defaultUiColors = {
   contentBg:     '#f8fafc',
 };
 
+export const defaultDarkUiColors = {
+  sidebarBg:     '#0f172a',
+  sidebarAccent: '#6366f1',
+  headerBg:      '#1e293b',
+  headerBorder:  '#334155',
+  contentBg:     '#0f172a',
+};
+
 const initialState = {
   siteOwner:            { username: 'admin', password: '', mustChangePassword: true },
   companies:            [],
@@ -114,11 +122,28 @@ function reducer(state, action) {
       return { ...state, companyName: action.payload };
     case 'UPDATE_COMPANY_LOGO':
       return { ...state, companyLogo: action.payload };
-    case 'SET_THEME_MODE':
-      return { ...state, themeMode: action.payload };
+    case 'SET_THEME_MODE': {
+      const newMode = action.payload;
+      const isCurrentlyDark = state.themeMode === 'dark';
+      const isGoingDark = newMode === 'dark';
+      const colorsAreDefault =
+        JSON.stringify(state.uiColors) === JSON.stringify(defaultUiColors) ||
+        JSON.stringify(state.uiColors) === JSON.stringify(defaultDarkUiColors);
+      const newColors = colorsAreDefault
+        ? (isGoingDark ? defaultDarkUiColors : defaultUiColors)
+        : state.uiColors;
+      return { ...state, themeMode: newMode, uiColors: newColors };
+    }
     case 'TOGGLE_DARK_MODE': {
       const next = { light: 'dark', dark: 'system', system: 'light' };
-      return { ...state, themeMode: next[state.themeMode] || 'dark' };
+      const newMode = next[state.themeMode] || 'dark';
+      const colorsAreDefault =
+        JSON.stringify(state.uiColors) === JSON.stringify(defaultUiColors) ||
+        JSON.stringify(state.uiColors) === JSON.stringify(defaultDarkUiColors);
+      const newColors = colorsAreDefault
+        ? (newMode === 'dark' ? defaultDarkUiColors : defaultUiColors)
+        : state.uiColors;
+      return { ...state, themeMode: newMode, uiColors: newColors };
     }
     case 'SET_FILTER_PROJECT':
       return { ...state, filterProject: action.payload };
@@ -169,17 +194,30 @@ export function AppProvider({ children }) {
   // ── Dispatch wrapper: optimistic update + async API sync ─────────────────
   const dispatch = useCallback((action) => {
     // Enrich toggle actions with the computed new value so syncAction can persist it
+    const colorsAreDefault =
+      JSON.stringify(state.uiColors) === JSON.stringify(defaultUiColors) ||
+      JSON.stringify(state.uiColors) === JSON.stringify(defaultDarkUiColors);
     let enriched = action;
     if (action.type === 'TOGGLE_DARK_MODE') {
       const next = { light: 'dark', dark: 'system', system: 'light' };
-      enriched = { ...action, _themeMode: next[state.themeMode] || 'dark' };
+      const newMode = next[state.themeMode] || 'dark';
+      const newColors = colorsAreDefault
+        ? (newMode === 'dark' ? defaultDarkUiColors : defaultUiColors)
+        : state.uiColors;
+      enriched = { ...action, _themeMode: newMode, _uiColors: newColors };
+    }
+    if (action.type === 'SET_THEME_MODE') {
+      const newColors = colorsAreDefault
+        ? (action.payload === 'dark' ? defaultDarkUiColors : defaultUiColors)
+        : state.uiColors;
+      enriched = { ...action, _uiColors: newColors };
     }
     if (action.type === 'TOGGLE_SIDEBAR') {
       enriched = { ...action, _collapsed: !state.sidebarCollapsed };
     }
     rawDispatch(enriched);
     syncAction(enriched); // fire-and-forget
-  }, [state.themeMode, state.sidebarCollapsed]);
+  }, [state.themeMode, state.sidebarCollapsed, state.uiColors]);
 
   // ── Scoped state: filter to active company ───────────────────────────────
   const activeCompanyId = state.impersonatedCompanyId ?? state.currentUser?.companyId ?? null;

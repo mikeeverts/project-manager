@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import { isAdmin, ROLE_LABELS } from '../utils/auth';
 import { getCompletionColor } from '../utils/colors';
-import { defaultUiColors } from '../context/AppContext';
+import { defaultUiColors, defaultDarkUiColors } from '../context/AppContext';
 import Avatar from '../components/UI/Avatar';
 import ConfirmModal from '../components/UI/ConfirmModal';
 
@@ -753,8 +753,9 @@ function ColorsTab() {
   }
 
   function resetUiColors() {
-    setLocalUiColors({ ...defaultUiColors });
-    dispatch({ type: 'UPDATE_UI_COLORS', payload: defaultUiColors });
+    const defaults = state.themeMode === 'dark' ? defaultDarkUiColors : defaultUiColors;
+    setLocalUiColors({ ...defaults });
+    dispatch({ type: 'UPDATE_UI_COLORS', payload: defaults });
     setUiColorsSaved(false);
   }
 
