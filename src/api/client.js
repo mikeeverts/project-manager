@@ -7,8 +7,8 @@ async function request(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || res.statusText);
   }
   return res.json();
 }

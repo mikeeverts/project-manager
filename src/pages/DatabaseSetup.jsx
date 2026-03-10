@@ -53,7 +53,11 @@ export default function DatabaseSetup({ onComplete }) {
       setTestMsg('Connection successful — credentials are valid.');
     } catch (e) {
       setTestStatus('fail');
-      setTestMsg(e.message);
+      setTestMsg(
+        e.message === 'Failed to fetch'
+          ? 'Cannot reach the ProjectHub server. Make sure it is running (npm run dev).'
+          : e.message
+      );
     }
   }
 
@@ -67,7 +71,11 @@ export default function DatabaseSetup({ onComplete }) {
       setStep('done');
     } catch (e) {
       setSetupStatus('fail');
-      setSetupMsg(e.message);
+      setSetupMsg(
+        e.message === 'Failed to fetch'
+          ? 'Cannot reach the ProjectHub server. Make sure it is running (npm run dev).'
+          : e.message
+      );
     }
   }
 

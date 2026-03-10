@@ -7,6 +7,41 @@ import { hashPassword } from '../../src/utils/auth.js';
 
 const router = express.Router();
 
+function friendlyError(e, dbName) {
+  const msg = (e.message || '').toLowerCase();
+  const code = (e.code || '');
+
+  if (code === 'ELOGIN' || msg.includes('login failed') || msg.includes('18456'))
+    return 'Login failed — username or password is incorrect.';
+
+  if (msg.includes('enotfound') || msg.includes('getaddrinfo') || msg.includes('no such host'))
+    return 'Server not found — check the hostname. Make sure it is spelled correctly and reachable on the network.';
+
+  if (msg.includes('econnrefused') || msg.includes('10061') || msg.includes('actively refused'))
+    return 'Connection refused — SQL Server is not accepting connections on that port. Verify the port number and that SQL Server is running.';
+
+  if (code === 'ESOCKET' || msg.includes('esocket') || msg.includes('socket'))
+    return 'Network error — could not open a socket to the server. Check the hostname and port.';
+
+  if (code === 'ETIMEOUT' || msg.includes('timeout') || msg.includes('timed out'))
+    return 'Connection timed out — the server did not respond. Check the hostname, port, and any firewall rules.';
+
+  if (msg.includes('certificate') || msg.includes('ssl') || msg.includes('tls') || msg.includes('self signed'))
+    return 'SSL/TLS error — try enabling "Trust server certificate", or disable "Encrypt connection" for local servers.';
+
+  if (msg.includes('cannot open database') || msg.includes('4060'))
+    return `Database "${dbName}" does not exist or this user cannot access it. Use "Create Database & Tables" to create it.`;
+
+  if (msg.includes('permission') || msg.includes('create database') || msg.includes('1262'))
+    return 'Permission denied — this user does not have permission to create databases on the server.';
+
+  if (msg.includes('named pipes') || msg.includes('1326'))
+    return 'Cannot connect — verify the server name and that SQL Server Browser is running (for named instances).';
+
+  // Fall back to the original message but clean up common prefixes
+  return e.message.replace(/^(ConnectionError|RequestError|PreparedStatementError):\s*/i, '');
+}
+
 const defaultColorConfig = {
   ranges: [
     { min: 0,   max: 33,  color: '#ef4444', label: 'Not Started' },
@@ -33,7 +68,7 @@ router.post('/test', async (req, res) => {
     await testPool.request().query('SELECT 1 AS ok');
     res.json({ success: true, message: 'Connection successful' });
   } catch (e) {
-    res.status(400).json({ success: false, message: e.message });
+    res.status(400).json({ success: false, message: friendlyError(e, config.database) });
   } finally {
     if (testPool) try { await testPool.close(); } catch { /* ignore */ }
   }
@@ -88,7 +123,7 @@ router.post('/setup', async (req, res) => {
   } catch (e) {
     if (masterPool) try { await masterPool.close(); } catch { /* ignore */ }
     if (appPool)    try { await appPool.close();    } catch { /* ignore */ }
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: friendlyError(e, safeName) });
   }
 });
 
