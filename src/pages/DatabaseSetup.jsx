@@ -28,8 +28,8 @@ export default function DatabaseSetup({ onComplete }) {
     database: 'ProjectHub',
     user: '',
     password: '',
-    encrypt: true,
-    trustServerCertificate: false,
+    encrypt: false,
+    trustServerCertificate: true,
   });
   const [step, setStep] = useState('connect'); // connect | setup | done
   const [testStatus, setTestStatus] = useState(null);  // null | 'testing' | 'ok' | 'fail'
@@ -156,7 +156,7 @@ export default function DatabaseSetup({ onComplete }) {
                   <input type="checkbox" name="encrypt" checked={config.encrypt}
                     onChange={handleChange} className="accent-indigo-600" />
                   Encrypt connection
-                  <span className="text-xs text-slate-400">(required for Azure)</span>
+                  <span className="text-xs text-slate-400">(enable for Azure SQL)</span>
                 </label>
                 <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                   <input type="checkbox" name="trustServerCertificate"

@@ -42,6 +42,13 @@ if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => res.sendFile(join(distPath, 'index.html')));
 }
 
+// Global error handler — always return JSON so the UI can display the message
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[server error]', err);
+  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
+});
+
 // Load saved DB config on startup (non-fatal if missing)
 await loadConfig();
 
