@@ -1,4 +1,5 @@
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { saveConfig } from '../config.js';
 import { getPool, resetPool, sql } from '../db.js';
 import { SCHEMA_STATEMENTS } from '../schema.js';
@@ -62,12 +63,15 @@ const defaultUiColors = {
 // POST /api/db/test — verify credentials without saving or creating anything
 router.post('/test', async (req, res) => {
   const config = req.body;
+  console.log('[db/test] config received:', { ...config, password: '***' });
   let testPool;
   try {
     testPool = await getPool({ ...config, database: 'master' });
     await testPool.request().query('SELECT 1 AS ok');
+    console.log('[db/test] success');
     res.json({ success: true, message: 'Connection successful' });
   } catch (e) {
+    console.error('[db/test] error:', e.message);
     res.status(400).json({ success: false, message: friendlyError(e, config.database) });
   } finally {
     if (testPool) try { await testPool.close(); } catch { /* ignore */ }
@@ -135,6 +139,44 @@ router.post('/seed', async (req, res) => {
     res.json({ success: true, message: 'Demo data loaded successfully' });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// POST /api/db/create-account — create first company + admin user
+router.post('/create-account', async (req, res) => {
+  const { companyName, name, email, password } = req.body;
+  if (!companyName || !name || !email || !password)
+    return res.status(400).json({ message: 'All fields are required.' });
+
+  const companyId = uuidv4();
+  const memberId  = uuidv4();
+  const now       = new Date();
+
+  try {
+    const pool = await getPool();
+
+    await pool.request()
+      .input('id',        sql.NVarChar,      companyId)
+      .input('name',      sql.NVarChar,      companyName)
+      .input('createdAt', sql.DateTimeOffset, now)
+      .query('INSERT INTO companies (id, name, created_at) VALUES (@id, @name, @createdAt)');
+
+    await pool.request()
+      .input('id',          sql.NVarChar,      memberId)
+      .input('companyId',   sql.NVarChar,      companyId)
+      .input('name',        sql.NVarChar,      name)
+      .input('email',       sql.NVarChar,      email)
+      .input('avatarColor', sql.NVarChar,      '#6366f1')
+      .input('role',        sql.NVarChar,      'admin')
+      .input('password',    sql.NVarChar,      hashPassword(password))
+      .input('createdAt',   sql.DateTimeOffset, now)
+      .query(`INSERT INTO team_members
+        (id, company_id, name, email, avatar_color, role, password, is_disabled, created_at)
+        VALUES (@id, @companyId, @name, @email, @avatarColor, @role, @password, 0, @createdAt)`);
+
+    res.json({ success: true, message: 'Account created successfully.' });
+  } catch (e) {
+    res.status(500).json({ message: friendlyError(e) });
   }
 });
 
