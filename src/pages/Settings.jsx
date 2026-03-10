@@ -529,7 +529,7 @@ function DepartmentsTab() {
 
   function handleAddDept() {
     if (!newDept.name.trim()) return;
-    dispatch({ type: 'ADD_DEPARTMENT', payload: { id: uuidv4(), name: newDept.name.trim(), color: newDept.color, createdAt: new Date().toISOString() } });
+    dispatch({ type: 'ADD_DEPARTMENT', payload: { id: uuidv4(), companyId: state.currentUser?.companyId ?? state.impersonatedCompanyId, name: newDept.name.trim(), color: newDept.color, createdAt: new Date().toISOString() } });
     setNewDept({ name: '', color: '#6366f1' });
     setShowAddDept(false);
   }

@@ -196,12 +196,14 @@ export function AppProvider({ children }) {
   let migratedCompanies;
   let migratedMembers;
   let migratedProjects;
+  let migratedDepartments;
 
   if (!saved) {
     // Fresh install: empty data so setup wizard runs
     migratedCompanies = [];
     migratedMembers = [];
     migratedProjects = [];
+    migratedDepartments = [];
   } else if (saved.companies && saved.companies.length > 0) {
     migratedCompanies = saved.companies;
     migratedMembers = (saved.teamMembers || []).map(m => ({
@@ -209,6 +211,12 @@ export function AppProvider({ children }) {
       isDisabled: m.isDisabled ?? false,
     }));
     migratedProjects = saved.projects || [];
+    // Migrate departments: if companyId missing, assign to first company
+    const firstCompanyId = saved.companies[0]?.id;
+    migratedDepartments = (saved.departments || []).map(d => ({
+      ...d,
+      companyId: d.companyId || firstCompanyId,
+    }));
   } else {
     // Old single-company data: create default company from saved companyName
     const defaultCompanyId = uuidv4();
@@ -231,6 +239,10 @@ export function AppProvider({ children }) {
       ...p,
       companyId: p.companyId || defaultCompanyId,
     }));
+    migratedDepartments = (saved.departments || []).map(d => ({
+      ...d,
+      companyId: d.companyId || defaultCompanyId,
+    }));
   }
 
   const [state, dispatch] = useReducer(reducer, {
@@ -240,7 +252,7 @@ export function AppProvider({ children }) {
     projects: migratedProjects,
     teamMembers: migratedMembers,
     tasks: saved?.tasks ?? [],
-    departments: saved?.departments ?? [],
+    departments: migratedDepartments,
     uiColors: saved?.uiColors ? { ...defaultUiColors, ...saved.uiColors } : defaultUiColors,
     companyName: saved?.companyName ?? 'ProjectHub',
     companyLogo: saved?.companyLogo ?? null,
@@ -268,12 +280,16 @@ export function AppProvider({ children }) {
   const scopedTasks = activeCompanyId
     ? state.tasks.filter(t => scopedProjectIds.has(t.projectId))
     : state.tasks;
+  const scopedDepartments = activeCompanyId
+    ? state.departments.filter(d => d.companyId === activeCompanyId)
+    : state.departments;
 
   const scopedState = {
     ...state,
     projects: scopedProjects,
     teamMembers: scopedMembers,
     tasks: scopedTasks,
+    departments: scopedDepartments,
   };
 
   return (

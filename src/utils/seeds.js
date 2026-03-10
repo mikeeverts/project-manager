@@ -42,9 +42,9 @@ export const seedProjects = [
 ];
 
 export const seedDepartments = [
-  { id: 'dept-1', name: 'Engineering', color: '#6366f1', createdAt: d(-90) },
-  { id: 'dept-2', name: 'Design', color: '#f59e0b', createdAt: d(-90) },
-  { id: 'dept-3', name: 'Marketing', color: '#10b981', createdAt: d(-90) },
+  { id: 'dept-1', companyId: SEED_COMPANY_ID, name: 'Engineering', color: '#6366f1', createdAt: d(-90) },
+  { id: 'dept-2', companyId: SEED_COMPANY_ID, name: 'Design', color: '#f59e0b', createdAt: d(-90) },
+  { id: 'dept-3', companyId: SEED_COMPANY_ID, name: 'Marketing', color: '#10b981', createdAt: d(-90) },
 ];
 
 export const seedTeamMembers = [

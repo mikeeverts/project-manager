@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../context/AppContext';
 import ConfirmModal from '../components/UI/ConfirmModal';
+import TestRunner from './TestRunner';
 
 function CompanyForm({ company, onSave, onClose }) {
   const [name, setName] = useState(company?.name || '');
@@ -46,6 +47,11 @@ export default function SuperAdminDashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const [editCompany, setEditCompany] = useState(null);
   const [deleteCompany, setDeleteCompany] = useState(null);
+  const [activeView, setActiveView] = useState('companies'); // 'companies' | 'tests'
+
+  if (activeView === 'tests') {
+    return <TestRunner onBack={() => setActiveView('companies')} />;
+  }
 
   const companies = rawState.companies;
 
@@ -100,6 +106,15 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveView('tests')}
+            className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Test Runner
+          </button>
           <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
             Site Admin
           </span>

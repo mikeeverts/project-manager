@@ -15,6 +15,18 @@ export const isAdmin = (u) => canDo(u, 'admin');
 export const isProjectManager = (u) => canDo(u, 'project_manager');
 export const isUser = (u) => canDo(u, 'user');
 
+// Check if user has a given role on a specific project
+// projectRole levels: admin > project_manager > user (same ROLES mapping)
+export function canDoOnProject(currentUser, project, requiredProjectRole) {
+  if (!currentUser || !project) return false;
+  if (currentUser.isSuperAdmin) return true;
+  // Company admins have full access to all company projects
+  if (ROLES[currentUser.role] >= ROLES['admin']) return true;
+  const membership = (project.members || []).find(m => m.memberId === currentUser.id);
+  if (!membership) return false;
+  return (ROLES[membership.projectRole] || 0) >= (ROLES[requiredProjectRole] || 0);
+}
+
 export function hashPassword(password) {
   // Simple deterministic hash for client-side demo (not production-safe)
   let hash = 0;
