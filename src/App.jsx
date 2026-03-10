@@ -64,19 +64,34 @@ function AppGate() {
   // 0a. Server unreachable
   if (apiStatus.error) return <ErrorScreen error={apiStatus.error} />;
 
-  // 0b. DB not yet configured — show setup screen (no auth required)
-  if (!apiStatus.dbConfigured) return <DatabaseSetup onComplete={reinitialize} />;
-
-  // 1. First-time setup: no companies and not super-admin
-  if (companies.length === 0 && !currentUser?.isSuperAdmin) return <SetupWizard />;
-
-  // 2. Not logged in
+  // 1. Not logged in — always show Login first.
+  //    When DB is not yet configured, AppContext keeps the default
+  //    siteOwner (admin / admin) so the site admin can still get in.
   if (!currentUser) return <Login />;
 
-  // 3. Super-admin must change default password
+  // 2. DB not yet configured — only the site admin can set it up
+  if (!apiStatus.dbConfigured) {
+    if (currentUser.isSuperAdmin) return <DatabaseSetup onComplete={reinitialize} />;
+    // Regular users can't use the app without a database
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-sm text-center">
+          <p className="text-slate-700 font-medium mb-1">Database not configured</p>
+          <p className="text-sm text-slate-500">Contact your site administrator to complete setup.</p>
+          <button onClick={() => dispatch({ type: 'LOGOUT' })}
+            className="mt-4 text-sm text-indigo-600 hover:underline">Sign out</button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. First-time setup: no companies and not super-admin
+  if (companies.length === 0 && !currentUser?.isSuperAdmin) return <SetupWizard />;
+
+  // 4. Super-admin must change default password (only after DB is ready)
   if (currentUser.isSuperAdmin && currentUser.mustChangePassword) return <ChangePassword />;
 
-  // 4. Super-admin not impersonating → company management dashboard
+  // 5. Super-admin not impersonating → company management dashboard
   if (currentUser.isSuperAdmin && !impersonatedCompanyId) return <SuperAdminDashboard />;
 
   // 5. Normal app
