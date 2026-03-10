@@ -165,10 +165,8 @@ export default function Team() {
   const [memberPage, setMemberPage] = useState(1);
   const [memberPageSize, setMemberPageSize] = useState(10);
 
-  // Only show members belonging to the current user's company
-  const companyMembers = state.teamMembers.filter(
-    m => m.companyId === state.currentUser?.companyId
-  );
+  // AppContext already scopes teamMembers to the active company
+  const companyMembers = state.teamMembers;
 
   function handleCreateMember(data) {
     dispatch({
@@ -176,7 +174,7 @@ export default function Team() {
       payload: {
         ...data,
         id: uuidv4(),
-        companyId: state.currentUser.companyId,
+        companyId: state.impersonatedCompanyId ?? state.currentUser?.companyId,
         isDisabled: false,
         createdAt: new Date().toISOString(),
       },
