@@ -1,7 +1,7 @@
 {
   "name": "project-manager",
   "private": true,
-  "version": "2.008",
+  "version": "2.009",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n \"API,UI\" -c \"cyan,magenta\" \"node server/index.js\" \"vite\"",

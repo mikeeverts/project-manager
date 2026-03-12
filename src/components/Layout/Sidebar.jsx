@@ -191,7 +191,7 @@ export default function Sidebar() {
 
         {/* Collapse toggle */}
         <div className={`flex ${collapsed ? 'justify-center' : 'items-center justify-between px-2'}`}>
-          {!collapsed && <p className="text-slate-500 text-xs">v2.008</p>}
+          {!collapsed && <p className="text-slate-500 text-xs">v2.009</p>}
           <button
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
